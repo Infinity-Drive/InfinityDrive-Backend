@@ -1,0 +1,25 @@
+{
+  "name": "infinitydrive",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mhd3v/InfinityDrive.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mhd3v/InfinityDrive/issues"
+  },
+  "homepage": "https://github.com/mhd3v/InfinityDrive#readme",
+  "dependencies": {
+    "async": "^2.6.1",
+    "express": "^4.16.4",
+    "googleapis": "^34.0.0",
+    "hbs": "^4.0.1"
+  }
+}
