@@ -43,8 +43,8 @@ app.get('/gdrive/saveToken', (req, res) => {
 app.get('/gdrive/listFiles', (req, res) => {
     gd.gdrive.listFiles(req, res, gd).then((files) => {
         res.render('files.hbs', {files});
-    }).catch((err) => {
-        console.log(err);
+    }, (err) => {
+        res.render('error.hbs', {err})
     });
 });
 
@@ -70,7 +70,11 @@ app.get('/splitUpload', (req, res) => {
 
         splitter.splitFileAndUpload(tokens, accounts, readStream, fileSizeInBytes, res, gd);
 
-    }).catch((err) => console.log(err));
+    }, (err) => {
+        res.render('error.hbs', { err });
+    }).catch((err) => {
+        console.log(err);
+    });
     
 });
 

@@ -5,15 +5,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Some website</title>
+    <title>Infinity Drive</title>
 </head>
 
 <body>
 
 <ul>
     <h1>Files:</h1>
-    {{#each file}}
-        <li>{{ this }}</li>
+    {{#each files}}
+        <h1>---</h1>
+        <ol>
+        {{#each this}}
+            <li>{{ this }}</li>
+        {{/each}}
+        </ol>
+        
     {{/each}}
 </ul>
 
