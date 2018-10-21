@@ -1,9 +1,8 @@
 const fs = require('fs');
-const splitter = require('./splitter');
 
 const SCOPES = ['https://www.googleapis.com/auth/drive'];
 
-var saveToken = (req, res, gdriveUtils) => {
+var saveToken = (req, res, oAuth2Client) => {
 
     fs.readFile('tokens.json', (err, tokens) => {
 
@@ -15,7 +14,7 @@ var saveToken = (req, res, gdriveUtils) => {
 
             console.log('creating token file');
 
-            gdriveUtils.oAuth2Client.getToken(code, (err, token) => {
+            oAuth2Client.getToken(code, (err, token) => {
                 if (err) return console.error('Error retrieving access token');
                 updatedTokens.push(token);
                 fs.writeFileSync('tokens.json', JSON.stringify(updatedTokens));
@@ -25,7 +24,7 @@ var saveToken = (req, res, gdriveUtils) => {
         else {
             updatedTokens = JSON.parse(tokens);
 
-            gdriveUtils.oAuth2Client.getToken(code, (err, token) => {
+            oAuth2Client.getToken(code, (err, token) => {
                 if (err) return console.error('Error retrieving access token');
                 updatedTokens.push(token);
                 fs.writeFileSync('tokens.json', JSON.stringify(updatedTokens));
@@ -65,9 +64,9 @@ var listFiles = (req, res, gdriveUtils) => {
     
 };
 
-var setAuthorizationPage = (req, res, gdriveUtils) => {
+var setAuthorizationPage = (req, res, oAuth2Client) => {
 
-    const url = gdriveUtils.oAuth2Client.generateAuthUrl({
+    const url = oAuth2Client.generateAuthUrl({
         access_type: 'online',
         scope: SCOPES,
     });
@@ -76,8 +75,8 @@ var setAuthorizationPage = (req, res, gdriveUtils) => {
 
 }
 
-function getFilesForAccount(auth, gdriveUtils) {
-    const drive = gdriveUtils.google.drive({ version: 'v3', auth });
+function getFilesForAccount(auth, google) {
+    const drive = google.drive({ version: 'v3', auth });
     drive.files.list({
         pageSize: 10,
         fields: 'nextPageToken, files(id, name)',
@@ -94,9 +93,9 @@ function getFilesForAccount(auth, gdriveUtils) {
     });
 }
 
-var upload = (gdriveUtils, fileName, readStream, totalChunks, res) => {
+var upload = (auth, google, fileName, readStream, totalChunks, res, lastChunk) => {
     console.log(`uploading ${fileName}`);
-    const drive = gdriveUtils.google.drive({ version: 'v3', auth });
+    const drive = google.drive({ version: 'v3', auth });
     var fileMetadata = {
         'name': fileName
     };
@@ -111,10 +110,10 @@ var upload = (gdriveUtils, fileName, readStream, totalChunks, res) => {
         if (err) {
             console.error(err);
         } else {
-            chunksUploaded++;
-            if (chunksUploaded == totalChunks) {
-                res.render('upload-success.hbs', { chunksUploaded });
-            }
+
+            if (lastChunk) 
+                res.render('upload-success.hbs');
+            
             console.log('File Id: ', file.id);
         }
     });

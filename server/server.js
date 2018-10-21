@@ -1,11 +1,16 @@
 const express = require('express');
 const { google } = require('googleapis');
 const hbs = require('hbs');
+
 const gdrive = require('./gdrive');
+const splitter = require('./splitter');
+const utils = require('./utils');
+
+const fs = require('fs');
 
 const app = express();
 
-var gdriveUtils = {};
+var gd = {};    //this object will contain everything related to google drive, from all utility functions to oAuthClient. i.e. wrapper for google drive
 
 app.set('view engine', 'hbs'); //app.set is used to set express server configurations. Takes key value pairs.
 
@@ -17,7 +22,7 @@ app.use((req, res, next) => {   //this runs before each route
 
     var oAuth2Client_google = new google.auth.OAuth2(client_id, client_secret, redirect_uri);
 
-    gdriveUtils = { google, oAuth2Client: oAuth2Client_google, gdrive};
+    gd = { google, oAuth2Client: oAuth2Client_google, gdrive};
 
     next();
 
@@ -28,15 +33,15 @@ app.get('/', (req, res) => {
 });
 
 app.get('/gdrive/authorize', (req, res) => {
-    gdrive.setAuthorizationPage(req, res, gdriveUtils.oAuth2Client);
+    gd.gdrive.setAuthorizationPage(req, res, gd.oAuth2Client);
 });
 
 app.get('/gdrive/saveToken', (req, res) => {
-    gdrive.saveToken(req, res, gdriveUtils);
+    gd.gdrive.saveToken(req, res, gd.oAuth2Client);
 });
 
 app.get('/gdrive/listFiles', (req, res) => {
-    gdrive.listFiles(req, res, gdriveUtils).then((files) => {
+    gd.gdrive.listFiles(req, res, gd).then((files) => {
         res.render('files.hbs', {files});
     }).catch((err) => {
         console.log(err);
@@ -45,26 +50,20 @@ app.get('/gdrive/listFiles', (req, res) => {
 
 app.get('/splitUpload', (req, res) => {
 
-    fs.readFile('tokens.json', (err, tokens) => {
+    utils.getTokens().then((tokens) => {
 
-        if (!err) {
+        var fileName = __dirname + '/a.zip';
 
-            tokens = JSON.parse(tokens);
+        var readStream = fs.createReadStream(fileName);
 
-            var fileName = __dirname + '/a.zip';
+        var stats = fs.statSync(fileName);
+        var fileSizeInBytes = stats["size"];
 
-            var readStream = fs.createReadStream(fileName);
+        var accounts = tokens.length; //this will eventually hold information for connected accounts
 
-            var stats = fs.statSync(fileName);
-            var fileSizeInBytes = stats["size"];
+        splitter.splitFileAndUpload(tokens, accounts, readStream, fileSizeInBytes, res, gd);
 
-            var accounts = tokens.length; //this is temporary for now, it will eventually hold information for connected account
-
-            splitter.splitFileAndUpload(tokens, accounts, readStream, fileSizeInBytes, res, gdriveUtils);
-
-        }
-
-    });
+    }).catch((err) => console.log(err));
     
 });
 
