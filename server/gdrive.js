@@ -1,39 +1,38 @@
 const fs = require('fs');
+const utils = require('./utils');
 
 const SCOPES = ['https://www.googleapis.com/auth/drive'];
 
 var saveToken = (req, res, oAuth2Client) => {
 
-    fs.readFile('tokens.json', (err, tokens) => {
+    var updatedTokens = [];
+    var code = req.query.code;
 
-        var updatedTokens = [];
+    utils.getTokens().then((tokens) => {
+        //success case
+        updatedTokens = tokens;
 
-        var code = req.query.code;
+        oAuth2Client.getToken(code, (err, token) => {
+            if (err) return console.error('Error retrieving access token');
+            //if token successfully obtained:
+            updatedTokens.push(token);
+            fs.writeFileSync('tokens.json', JSON.stringify(updatedTokens));
+        });
 
-        if (err) {
+    }).catch((err) => {
+        //failure case
+        console.log(err, ' - creating token file');
 
-            console.log('creating token file');
-
-            oAuth2Client.getToken(code, (err, token) => {
-                if (err) return console.error('Error retrieving access token');
-                updatedTokens.push(token);
-                fs.writeFileSync('tokens.json', JSON.stringify(updatedTokens));
-            });
-        }
-
-        else {
-            updatedTokens = JSON.parse(tokens);
-
-            oAuth2Client.getToken(code, (err, token) => {
-                if (err) return console.error('Error retrieving access token');
-                updatedTokens.push(token);
-                fs.writeFileSync('tokens.json', JSON.stringify(updatedTokens));
-            });
-        }
-
-        res.redirect('/');
+        oAuth2Client.getToken(code, (err, token) => {
+            if (err) return console.error('Error retrieving access token');
+            //if token successfully obtained:
+            updatedTokens.push(token);
+            fs.writeFileSync('tokens.json', JSON.stringify(updatedTokens));
+        });
 
     });
+
+    res.redirect('/');
 
 }
 

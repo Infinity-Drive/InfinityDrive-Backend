@@ -48,6 +48,13 @@ app.get('/gdrive/listFiles', (req, res) => {
     });
 });
 
+app.get('/listFiles', (req, res) => {
+    utils.getTokens().then((tokens) => {
+        
+    }).catch((err) => console.log(err));
+});
+
+
 app.get('/splitUpload', (req, res) => {
 
     utils.getTokens().then((tokens) => {
