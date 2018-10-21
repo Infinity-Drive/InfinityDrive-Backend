@@ -3,7 +3,7 @@ const splitter = require('./splitter');
 
 const SCOPES = ['https://www.googleapis.com/auth/drive'];
 
-var saveToken = (req, res, oAuth2Client) => {
+var saveToken = (req, res, gdriveUtils) => {
 
     fs.readFile('tokens.json', (err, tokens) => {
 
@@ -15,7 +15,7 @@ var saveToken = (req, res, oAuth2Client) => {
 
             console.log('creating token file');
 
-            oAuth2Client.getToken(code, (err, token) => {
+            gdriveUtils.oAuth2Client.getToken(code, (err, token) => {
                 if (err) return console.error('Error retrieving access token');
                 updatedTokens.push(token);
                 fs.writeFileSync('tokens.json', JSON.stringify(updatedTokens));
@@ -25,7 +25,7 @@ var saveToken = (req, res, oAuth2Client) => {
         else {
             updatedTokens = JSON.parse(tokens);
 
-            oAuth2Client.getToken(code, (err, token) => {
+            gdriveUtils.oAuth2Client.getToken(code, (err, token) => {
                 if (err) return console.error('Error retrieving access token');
                 updatedTokens.push(token);
                 fs.writeFileSync('tokens.json', JSON.stringify(updatedTokens));
@@ -38,7 +38,7 @@ var saveToken = (req, res, oAuth2Client) => {
 
 }
 
-var listFiles = (req, res, oAuth2Client, google) => {
+var listFiles = (req, res, gdriveUtils) => {
     
     return new Promise((resolve, reject) => {
         fs.readFile('tokens.json', (err, tokens) => {
@@ -49,8 +49,8 @@ var listFiles = (req, res, oAuth2Client, google) => {
                 files = [];
 
                 tokens.forEach(token => {
-                    oAuth2Client.setCredentials(token);
-                    files.push(getFilesForAccount(oAuth2Client, google));
+                    gdriveUtils.oAuth2Client.setCredentials(token);
+                    files.push(getFilesForAccount(gdriveUtils.oAuth2Client, gdriveUtils.google));
                 });
 
                 resolve(files);     
@@ -63,36 +63,11 @@ var listFiles = (req, res, oAuth2Client, google) => {
         });
     });
     
-
 };
 
+var setAuthorizationPage = (req, res, gdriveUtils) => {
 
-var uploadFile = (req, res, oAuth2Client, google) => {
-
-    fs.readFile('tokens.json', (err, tokens) => {
-
-        if (!err) {
-
-            tokens = JSON.parse(tokens);
-
-            var fileName = __dirname + '/a.zip';
-
-            var readStream = fs.createReadStream(fileName);
-
-            var stats = fs.statSync(fileName);
-            var fileSizeInBytes = stats["size"];
-
-            splitter.splitFileAndUpload(tokens, 3, readStream, fileSizeInBytes, oAuth2Client, google, res);
-
-        }
-
-    });
-
-};
-
-var setAuthorizationPage = (req, res, oAuth2Client) => {
-
-    const url = oAuth2Client.generateAuthUrl({
+    const url = gdriveUtils.oAuth2Client.generateAuthUrl({
         access_type: 'online',
         scope: SCOPES,
     });
@@ -101,8 +76,8 @@ var setAuthorizationPage = (req, res, oAuth2Client) => {
 
 }
 
-function getFilesForAccount(auth, google) {
-    const drive = google.drive({ version: 'v3', auth });
+function getFilesForAccount(auth, gdriveUtils) {
+    const drive = gdriveUtils.google.drive({ version: 'v3', auth });
     drive.files.list({
         pageSize: 10,
         fields: 'nextPageToken, files(id, name)',
@@ -119,4 +94,30 @@ function getFilesForAccount(auth, google) {
     });
 }
 
-module.exports = { setAuthorizationPage, saveToken, listFiles, uploadFile}
+var upload = (gdriveUtils, fileName, readStream, totalChunks, res) => {
+    console.log(`uploading ${fileName}`);
+    const drive = gdriveUtils.google.drive({ version: 'v3', auth });
+    var fileMetadata = {
+        'name': fileName
+    };
+    var media = {
+        body: fs.createReadStream(`${fileName}.bin`)
+    };
+    drive.files.create({
+        resource: fileMetadata,
+        media: media,
+        fields: 'id'
+    }, function (err, file) {
+        if (err) {
+            console.error(err);
+        } else {
+            chunksUploaded++;
+            if (chunksUploaded == totalChunks) {
+                res.render('upload-success.hbs', { chunksUploaded });
+            }
+            console.log('File Id: ', file.id);
+        }
+    });
+}
+
+module.exports = { setAuthorizationPage, saveToken, listFiles, upload}
