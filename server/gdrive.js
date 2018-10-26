@@ -1,38 +1,20 @@
 const fs = require('fs');
-const utils = require('./utils');
+const utils = require('./utils/utils');
 
 const SCOPES = ['https://www.googleapis.com/auth/drive'];
 
 var saveToken = (req, res, oAuth2Client) => {
 
-    var updatedTokens = [];
     var code = req.query.code;
 
-    utils.getTokens().then((tokens) => {
-        //success case
-        updatedTokens = tokens;
-
-        oAuth2Client.getToken(code, (err, token) => {
-            if (err) return console.error('Error retrieving access token');
-            //if token successfully obtained:
-            updatedTokens.push(token);
-            fs.writeFileSync('tokens.json', JSON.stringify(updatedTokens));
-        });
-
-    }, (err) => {
-        //failure case
-        console.log(err, ' - creating token file');
-
-        oAuth2Client.getToken(code, (err, token) => {
-            if (err) return console.error('Error retrieving access token');
-            //if token successfully obtained:
-            updatedTokens.push(token);
-            fs.writeFileSync('tokens.json', JSON.stringify(updatedTokens));
-        });
-
-    }).catch((e) => console.log(e));
-
-    res.redirect('/');
+    oAuth2Client.getToken(code, (err, token) => {
+        if (err) return console.error('Error retrieving access token');
+        //if token successfully obtained:
+        utils.saveToken(token, 'gdrive').then((msg) => {
+            console.log(msg);
+            res.redirect('/');
+        }).catch((e) => {console.log(e)})
+    });
 
 }
 
@@ -47,14 +29,14 @@ var setAuthorizationPage = (req, res, oAuth2Client) => {
 
 }
 
-var listFiles = (req, res, gdriveUtils) => {
+var getFilesAllGdriveAccounts = (req, res, gdriveUtils) => {
 
     return new Promise((resolve, reject) => {
 
-        utils.getTokens().then((tokens) => {
+        utils.getGdriveTokens().then((tokens) => {
 
             files = [];
-
+            
             tokens.forEach(token => {
 
                 gdriveUtils.oAuth2Client.setCredentials(token);
@@ -129,4 +111,4 @@ var upload = (auth, google, fileName, readStream, totalChunks, res, lastChunk) =
     });
 }
 
-module.exports = { setAuthorizationPage, saveToken, listFiles, upload}
+module.exports = { setAuthorizationPage, saveToken, getFilesAllGdriveAccounts, upload}

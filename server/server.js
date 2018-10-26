@@ -4,7 +4,7 @@ const hbs = require('hbs');
 
 const gdrive = require('./gdrive');
 const splitter = require('./splitter');
-const utils = require('./utils');
+const utils = require('./utils/utils');
 
 const fs = require('fs');
 
@@ -41,7 +41,7 @@ app.get('/gdrive/saveToken', (req, res) => {
 });
 
 app.get('/gdrive/listFiles', (req, res) => {
-    gd.gdrive.listFiles(req, res, gd).then((files) => {
+    gd.gdrive.getFilesAllGdriveAccounts(req, res, gd).then((files) => {
         res.render('files.hbs', {files});
     }, (err) => {
         res.render('error.hbs', {err})
@@ -57,18 +57,14 @@ app.get('/listFiles', (req, res) => {
 
 app.get('/splitUpload', (req, res) => {
 
-    utils.getTokens().then((tokens) => {
-
+    utils.getTokensData().then((tokensData) => {
+        
         var fileName = __dirname + '/a.zip';
-
         var readStream = fs.createReadStream(fileName);
-
         var stats = fs.statSync(fileName);
         var fileSizeInBytes = stats["size"];
 
-        var accounts = tokens.length; //this will eventually hold information for connected accounts
-
-        splitter.splitFileAndUpload(tokens, accounts, readStream, fileSizeInBytes, res, gd);
+        splitter.splitFileAndUpload(tokensData, readStream, fileSizeInBytes, res, gd);
 
     }, (err) => {
         res.render('error.hbs', { err });
