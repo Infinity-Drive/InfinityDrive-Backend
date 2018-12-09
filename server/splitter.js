@@ -1,6 +1,7 @@
 const fs = require('fs');
+const gdriveHelper = require('./utils/gdriveHelper');
 
-splitFileAndUpload = (tokensData, readStream, fileSizeInBytes, res, gd) => {
+splitFileAndUpload = (tokensData, readStream, fileSizeInBytes, res, oAuth2Client_google) => {
     
     var currentWriteStreamSize = 0;
     var currentStreamIndex = 0;
@@ -23,7 +24,7 @@ splitFileAndUpload = (tokensData, readStream, fileSizeInBytes, res, gd) => {
         if (currentWriteStreamSize > maxWriteStreamSize || lastChunk) {
 
             if (tokensData[currentStreamIndex].type == 'gdrive')
-                gd.gdrive.upload(gd.oAuth2Client, gd.google, `file${currentStreamIndex}`, writeStreams[currentStreamIndex], writeStreams.length, res, lastChunk);  //upload finished stream
+                gdriveHelper.upload(oAuth2Client_google, `file${currentStreamIndex}`, writeStreams[currentStreamIndex], writeStreams.length, res, lastChunk);  //upload finished stream
             
             //else if (account.get(i) == 'onedrive')
             //
@@ -41,7 +42,7 @@ splitFileAndUpload = (tokensData, readStream, fileSizeInBytes, res, gd) => {
                 currentStreamIndex ++; //get next stream index
                 
                 if (tokensData[currentStreamIndex].type == 'gdrive')
-                    gd.oAuth2Client.setCredentials(tokensData[currentStreamIndex].token); //update token, i.e. set for different account
+                    oAuth2Client_google.setCredentials(tokensData[currentStreamIndex].token); //update token, i.e. set for different account
 
                 console.log(`piping stream ${currentStreamIndex}`);
                 readStream.pipe(writeStreams[currentStreamIndex]);
@@ -56,7 +57,7 @@ splitFileAndUpload = (tokensData, readStream, fileSizeInBytes, res, gd) => {
     });
 
     readStream.pipe(writeStreams[currentStreamIndex]);  //start piping in 1st writable stream
-    gd.oAuth2Client.setCredentials(tokensData[currentStreamIndex].token);    //set token for 1st account in 1st writable stream
+    oAuth2Client_google.setCredentials(tokensData[currentStreamIndex].token);    //set token for 1st account in 1st writable stream
 
 }
 

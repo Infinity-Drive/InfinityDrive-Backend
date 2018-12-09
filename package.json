@@ -25,6 +25,11 @@
     "passport": "^0.4.0",
     "passport-azure-ad": "^4.0.0",
     "superagent": "^4.0.0-beta.5",
-    "uuid": "^3.3.2"
+    "uuid": "^3.3.2",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^8.4.0",
+    "lodash": "^4.17.11",
+    "mongoose": "^5.3.14",
+    "validator": "^10.9.0"
   }
 }
