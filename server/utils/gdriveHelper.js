@@ -52,44 +52,17 @@ var getUserEmail = async (auth) => {
     return userEmail;
 }
 
-var getFilesForAllAccounts = (req, res, oAuth2Client) => {
+var getFilesForAccount = (auth, token) => {
 
     return new Promise((resolve, reject) => {
 
-        utils.getGdriveTokens().then((tokens) => {
+        auth.setCredentials(token);
 
-            files = [];
-            
-            tokens.forEach(token => {
-
-                oAuth2Client.setCredentials(token);
-
-                getFilesForAccount(oAuth2Client).then((fetchedFiles) => {
-
-                    files.push(fetchedFiles);
-
-                    if (files.length == tokens.length)
-                        resolve(files);     //files for each account fetched, return them
-
-                }, (err) => reject(err)).catch((err) => reject(err));
-
-            });
-
-        }, (err) => reject(err)).catch((err) => reject(err));
-
-    });
-
-};
-
-var getFilesForAccount = (auth) => {
-
-    return new Promise((resolve, reject) => {
-
-        const drive = google.drive({ version: 'v3', auth });
+        const drive = google.drive({ version: 'v3', auth }); // need to specify auth as auth: auth or auth: any_other_name
 
         drive.files.list({
             pageSize: 10,
-            fields: 'nextPageToken, files(id, name)',
+            fields: 'nextPageToken, files(id, name, mimeType)',
             key: 'AIzaSyDHtla9ZqVhQm-dqEbFsM-sArr29XizGg4'
         }, (err, res) => {
 
@@ -98,9 +71,9 @@ var getFilesForAccount = (auth) => {
             const files = res.data.files;
 
             if (files.length) {
-                resolve(files.map(file => file.name));
+                resolve(files);
             } else {
-                resolve('No files found.');
+                reject('No files found.');
             }
         });
 
@@ -134,4 +107,4 @@ var upload = (auth, fileName, readStream, totalChunks, res, lastChunk) => {
     });
 }
 
-module.exports = { getAuthorizationUrl, saveToken, getFilesForAllAccounts, upload}
+module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount, upload}

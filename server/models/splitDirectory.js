@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost:27017/InfinityDrive', {useNewUrlParser: true});
+mongoose.set('useCreateIndex', true);
 
 var SplitDirectorySchema= new mongoose.Schema({ 
 

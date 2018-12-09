@@ -25,6 +25,11 @@ app.set('view engine', 'hbs'); //app.set is used to set express server configura
 
 app.use((req, res, next) => {   //this runs before each route
 
+    // res.setHeader('Access-Control-Allow-Origin', 'http://localhost:4200');    
+    // res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');    
+    // res.setHeader('Access-Control-Allow-Headers', 'x-auth,content-type');      
+    // res.setHeader('Access-Control-Allow-Credentials', true);  
+
     var client_id = '651431583012-j0k0oent5gsprkdimeup45c44353pb35.apps.googleusercontent.com';
     var client_secret = '9aRhiRYg7Va5e5l6Dq-x5VFL';
     var redirect_uri = 'http://localhost:3000/gdrive/saveToken';
@@ -47,12 +52,16 @@ app.get('/gdrive/saveToken', authenticate, (req, res) => {
     gdriveHelper.saveToken(req, res, oAuth2Client_google, req.user);
 });
 
-app.get('/gdrive/listFiles', (req, res) => {
-    gdriveHelper.getFilesForAllAccounts(req, res, oAuth2Client_google).then((files) => {
-        res.render('files.hbs', {files});
-    }, (err) => {
-        res.render('error.hbs', {err})
-    });
+app.get('/gdrive/listFiles', authenticate, (req, res) => {
+    
+    req.user.getAccountToken('5c0cc7891efd6918b488ec6a').then((token) => {
+
+        gdriveHelper.getFilesForAccount(oAuth2Client_google, token).then((files) => {
+            res.send(files);
+        }, (e) => res.send(e));
+
+    }, (e) => res.send(e));
+
 });
 
 app.get('/splitUpload', (req, res) => {

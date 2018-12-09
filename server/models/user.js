@@ -5,6 +5,7 @@ const _ = require('lodash');
 const bcrypt = require('bcryptjs');
 
 mongoose.connect('mongodb://localhost:27017/InfinityDrive', {useNewUrlParser: true});
+mongoose.set('useCreateIndex', true);
 
 var UserSchema = new mongoose.Schema({
     verficationToken: {type: String},
@@ -56,7 +57,7 @@ var UserSchema = new mongoose.Schema({
         },
 
         token: {
-            type: String
+            type: Object
         },
 
         email: {
@@ -91,13 +92,24 @@ UserSchema.methods.generateAuthToken = function () {    //can add any instance m
 UserSchema.methods.addAccount = function (token, accountType, email) {
     var user = this; 
 
-    token = token['access_token'];
     //user.tokens.concat([{access, token}]); //concat into the tokens array
     user.accounts.push({accountType, token, email});
 
     return user.save().then(() => {     //we're returning this promise so that we can catch it in server.js using a chained promise
         return token;
     });
+};
+
+UserSchema.methods.getAccountToken = function (accountId) {
+    var user = this;
+    
+    return new Promise((resolve, reject) => {
+        if(user.accounts.id(accountId))
+            resolve(user.accounts.id(accountId).token);
+
+        reject('No account found!');
+    });
+
 };
 
 
@@ -163,8 +175,6 @@ UserSchema.statics.findByCredentials = function (email, password) {
     });
 
 };
-
-
 
 UserSchema.pre('save', function(next) {   //mongoose middleware, this is going to run before save is called
 
