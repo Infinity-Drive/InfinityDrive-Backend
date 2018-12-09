@@ -90,14 +90,31 @@ UserSchema.methods.generateAuthToken = function () {    //can add any instance m
 };
 
 UserSchema.methods.addAccount = function (token, accountType, email) {
-    var user = this; 
 
-    //user.tokens.concat([{access, token}]); //concat into the tokens array
-    user.accounts.push({accountType, token, email});
+    return new Promise((resolve, reject) => {
 
-    return user.save().then(() => {     //we're returning this promise so that we can catch it in server.js using a chained promise
-        return token;
+        var user = this; 
+        var alreadyAdded = false;
+
+        user.accounts.forEach(function(account) {
+            if(account.email === email && account.accountType === accountType)
+                alreadyAdded = true;
+        });
+
+        if(alreadyAdded){
+            reject('Account already exists');
+        }
+
+        else{
+            user.accounts.push({accountType, token, email});
+
+            user.save().then(() => {     //we're returning this promise so that we can catch it in server.js using a chained promise
+                resolve(user.accounts);
+            });
+        }
+
     });
+    
 };
 
 UserSchema.methods.getAccountToken = function (accountId) {

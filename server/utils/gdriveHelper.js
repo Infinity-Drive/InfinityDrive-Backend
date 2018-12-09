@@ -17,16 +17,10 @@ var saveToken = (req, res, oAuth2Client, user) => {
             oAuth2Client.setCredentials(token);
 
             getUserEmail(oAuth2Client).then((email) => {
-                user.addAccount(token, 'gdrive', email).then((msg) => {
-                    console.log(msg);
+                user.addAccount(token, 'gdrive', email).then((accounts) => {
                     res.send(user.accounts);
-                }).catch((e) => {
-                    console.log(e);
-                    res.send(e);
-                });
-            }).catch((e) => {
-                console.log(e);
-            });
+                }, (err) => res.send(err));
+            }, (err) => console.log(err));
 
     });
 

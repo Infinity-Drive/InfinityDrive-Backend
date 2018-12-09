@@ -9,7 +9,7 @@ we know the user is logged in and we can then proceed with sending them to the r
 
 var authenticate = (req, res, next) => {    //defining a middleware
     
-    token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1YzBjYjdjZTc5MTQ3OTEyZGNiYTM0OTUiLCJhY2Nlc3MiOiJhdXRoIiwiaWF0IjoxNTQ0MzM3NDgyfQ.vF64Nuys9vcxtW9a1JNOXJMxbL02vA_FBbjcONN4vDg';
+    token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1YzBkMWI3Mjc4ZTYwZjJjOGM4YTY2YjkiLCJhY2Nlc3MiOiJhdXRoIiwiaWF0IjoxNTQ0MzYyODY3fQ.cFv_spEjMc-vSzvOLKpaBf53G6RAkh7d-mz4RWXzsbs';
     
     //CHANGE THIS FOR SECURitY
     // var token = req.header('x-auth'); //get token set by POST /users

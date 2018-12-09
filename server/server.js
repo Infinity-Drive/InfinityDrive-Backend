@@ -54,7 +54,7 @@ app.get('/gdrive/saveToken', authenticate, (req, res) => {
 
 app.get('/gdrive/listFiles', authenticate, (req, res) => {
     
-    req.user.getAccountToken('5c0cc7891efd6918b488ec6a').then((token) => {
+    req.user.getAccountToken('5c0d1156324a601004b68fec').then((token) => {
 
         gdriveHelper.getFilesForAccount(oAuth2Client_google, token).then((files) => {
             res.send(files);
