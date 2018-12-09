@@ -2,6 +2,12 @@ const express = require('express');
 const hbs = require('hbs');
 const { google } = require('googleapis');
 
+const _ = require('lodash');
+const bodyParser = require('body-parser');
+const {ObjectID} = require('mongodb');
+
+var {User} = require('./models/user');
+var {authenticate} = require('./middleware/authenticate');
 const gdriveHelper = require('./utils/gdriveHelper');
 
 const splitter = require('./splitter');
@@ -9,9 +15,11 @@ const utils = require('./utils/utils');
 
 const fs = require('fs');
 
+var oAuth2Client_google;
+
 const app = express();
 
-var oAuth2Client_google;
+app.use(bodyParser.json()); //body parser lets us send json to our server
 
 app.set('view engine', 'hbs'); //app.set is used to set express server configurations. Takes key value pairs.
 
@@ -32,11 +40,11 @@ app.get('/', (req, res) => {
 });
 
 app.get('/gdrive/authorize', (req, res) => {
-    gdriveHelper.setAuthorizationPage(req, res, oAuth2Client_google);
+    gdriveHelper.getAuthorizationUrl(req, res, oAuth2Client_google);
 });
 
-app.get('/gdrive/saveToken', (req, res) => {
-    gdriveHelper.saveToken(req, res, oAuth2Client_google);
+app.get('/gdrive/saveToken', authenticate, (req, res) => {
+    gdriveHelper.saveToken(req, res, oAuth2Client_google, req.user);
 });
 
 app.get('/gdrive/listFiles', (req, res) => {
@@ -64,6 +72,37 @@ app.get('/splitUpload', (req, res) => {
         console.log(err);
     });
     
+});
+
+app.post('/users/login', (req, res) => {
+
+    var body = _.pick(req.body, ['email', 'password']);
+    
+    User.findByCredentials(body.email, body.password).then((user) => {
+        return user.generateAuthToken().then((token) => {
+            res.header('x-auth', token).send(user);
+        });
+    }).catch((err) => {
+        res.status(400).send();
+    });
+    
+});
+
+app.post('/users', (req, res) => {
+
+    var body = _.pick(req.body, ['email', 'password']);
+
+    var newUser = new User(body);
+
+    newUser.save().then(() => {
+        return newUser.generateAuthToken();    //catched by *** then call (right below this)
+        //res.send(user);
+    }).then((token) => {             // ***
+        res.header('x-auth', token).send(newUser);    //when we set a 'x-' header it means we're creating a custom header 
+    }).catch((err) => {
+        res.status(400).send(err);
+    });
+
 });
 
 app.listen('3000', () => {

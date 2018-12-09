@@ -1,25 +1,38 @@
 const fs = require('fs');
-const utils = require('./utils.js');
+const utils = require('./utils');
 const { google } = require('googleapis');
 
-const SCOPES = ['https://www.googleapis.com/auth/drive'];
+const SCOPES = ['https://www.googleapis.com/auth/drive',
+                'https://www.googleapis.com/auth/userinfo.email',
+                'https://www.googleapis.com/auth/userinfo.profile'];
 
-var saveToken = (req, res, oAuth2Client) => {
+var saveToken = (req, res, oAuth2Client, user) => {
 
     var code = req.query.code;
 
     oAuth2Client.getToken(code, (err, token) => {
+
         if (err) return console.error('Error retrieving access token');
-        //if token successfully obtained:
-        utils.saveToken(token, 'gdrive').then((msg) => {
-            console.log(msg);
-            res.redirect('/');
-        }).catch((e) => {console.log(e)})
+
+            oAuth2Client.setCredentials(token);
+
+            getUserEmail(oAuth2Client).then((email) => {
+                user.addAccount(token, 'gdrive', email).then((msg) => {
+                    console.log(msg);
+                    res.send(user.accounts);
+                }).catch((e) => {
+                    console.log(e);
+                    res.send(e);
+                });
+            }).catch((e) => {
+                console.log(e);
+            });
+
     });
 
 }
 
-var setAuthorizationPage = (req, res, oAuth2Client) => {
+var getAuthorizationUrl = (req, res, oAuth2Client) => {
 
     const url = oAuth2Client.generateAuthUrl({
         access_type: 'offline',
@@ -28,7 +41,7 @@ var setAuthorizationPage = (req, res, oAuth2Client) => {
         scope: SCOPES
     });
 
-    res.render('home.hbs', { url });
+    res.send({ url });
 
 }
 
@@ -121,4 +134,4 @@ var upload = (auth, fileName, readStream, totalChunks, res, lastChunk) => {
     });
 }
 
-module.exports = { setAuthorizationPage, saveToken, getFilesAllGdriveAccounts, upload}
+module.exports = { getAuthorizationUrl, saveToken, getFilesForAllAccounts, upload}
