@@ -1,5 +1,6 @@
 const fs = require('fs');
-const utils = require('./utils/utils');
+const utils = require('./utils.js');
+const { google } = require('googleapis');
 
 const SCOPES = ['https://www.googleapis.com/auth/drive'];
 
@@ -21,15 +22,24 @@ var saveToken = (req, res, oAuth2Client) => {
 var setAuthorizationPage = (req, res, oAuth2Client) => {
 
     const url = oAuth2Client.generateAuthUrl({
-        access_type: 'online',
-        scope: SCOPES,
+        access_type: 'offline',
+        prompt: 'consent',
+        // access_type: 'online',
+        scope: SCOPES
     });
 
     res.render('home.hbs', { url });
 
 }
 
-var getFilesAllGdriveAccounts = (req, res, gdriveUtils) => {
+var getUserEmail = async (auth) => {
+    const plus = google.plus({ version: 'v1', auth });
+    const me = await plus.people.get({ userId: 'me' });
+    const userEmail = me.data.emails[0].value;
+    return userEmail;
+}
+
+var getFilesForAllAccounts = (req, res, oAuth2Client) => {
 
     return new Promise((resolve, reject) => {
 
@@ -39,9 +49,9 @@ var getFilesAllGdriveAccounts = (req, res, gdriveUtils) => {
             
             tokens.forEach(token => {
 
-                gdriveUtils.oAuth2Client.setCredentials(token);
+                oAuth2Client.setCredentials(token);
 
-                getFilesForAccount(gdriveUtils.oAuth2Client, gdriveUtils.google).then((fetchedFiles) => {
+                getFilesForAccount(oAuth2Client).then((fetchedFiles) => {
 
                     files.push(fetchedFiles);
 
@@ -58,7 +68,7 @@ var getFilesAllGdriveAccounts = (req, res, gdriveUtils) => {
 
 };
 
-var getFilesForAccount = (auth, google) => {
+var getFilesForAccount = (auth) => {
 
     return new Promise((resolve, reject) => {
 
@@ -85,7 +95,7 @@ var getFilesForAccount = (auth, google) => {
 
 }
 
-var upload = (auth, google, fileName, readStream, totalChunks, res, lastChunk) => {
+var upload = (auth, fileName, readStream, totalChunks, res, lastChunk) => {
     console.log(`uploading ${fileName}`);
     const drive = google.drive({ version: 'v3', auth });
     var fileMetadata = {
