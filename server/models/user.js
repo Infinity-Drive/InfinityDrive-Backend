@@ -117,6 +117,26 @@ UserSchema.methods.addAccount = function (token, accountType, email) {
     
 };
 
+UserSchema.methods.getAccounts = function () {
+    var user = this;
+    
+    return new Promise((resolve, reject) => {
+
+        // omit the account token for security
+
+        if(user.accounts.length != 0){
+            accounts = _.map(user.accounts, account => {
+                return _.omit(account.toObject(), ['token']);
+            });
+        
+            return resolve(accounts);
+        }
+        
+        reject('No account found!');
+    });
+
+};
+
 UserSchema.methods.getAccountToken = function (accountId) {
     var user = this;
     
@@ -129,6 +149,7 @@ UserSchema.methods.getAccountToken = function (accountId) {
     });
 
 };
+
 
 UserSchema.methods.changeMergedStatus = function (accountIds, status) {
     var user = this;

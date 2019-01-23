@@ -114,12 +114,15 @@ app.post('/users', (req, res) => {
 
 });
 
+app.get('/users/getAccounts', authenticate, (req, res) => {
+    req.user.getAccounts().then((accounts) => res.send(accounts), (err) => res.send(err));
+});
+
 app.post('/users/manage/accounts/merge', authenticate, (req, res) => {
     // accountIds is an array that will hold the object ids of the accounts to be updated
     var body = _.pick(req.body, ['accountIds', 'status']);
     req.user.changeMergedStatus(body.accountIds, body.status).then((msg) => res.send(msg), (err) => res.send(err));
 });
-
 
 app.listen('3000', () => {
     console.log('Server started');
