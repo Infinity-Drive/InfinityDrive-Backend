@@ -120,6 +120,7 @@ app.post('/users/manage/accounts/merge', authenticate, (req, res) => {
     req.user.changeMergedStatus(body.accountIds, body.status).then((msg) => res.send(msg), (err) => res.send(err));
 });
 
+
 app.listen('3000', () => {
     console.log('Server started');
 });
