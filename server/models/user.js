@@ -96,6 +96,9 @@ UserSchema.methods.addAccount = function (token, accountType, email) {
         var user = this; 
         var alreadyAdded = false;
 
+        // need to add accountType in an individual token when we have multiple tokens but don't know of which account
+        token['accountType'] = accountType;
+
         user.accounts.forEach(function(account) {
             if(account.email === email && account.accountType === accountType)
                 alreadyAdded = true;
@@ -137,19 +140,34 @@ UserSchema.methods.getAccounts = function () {
 
 };
 
-UserSchema.methods.getAccountToken = function (accountId) {
+// get token for multiple/single account(s)
+UserSchema.methods.getTokensForAccounts = function (accountIds) {
     var user = this;
+    var tokens = [];
     
     return new Promise((resolve, reject) => {
-        // if object id of an ADDED ACCOUNT is same as passed ID
-        if(user.accounts.id(accountId))
-            resolve(user.accounts.id(accountId).token);
 
-        reject('No account found!');
+        // if object id of an ADDED ACCOUNT is same as passed ID
+        accountIds.forEach(accountId => {
+            
+            if(user.accounts.id(accountId))
+                tokens.push(user.accounts.id(accountId).token);
+    
+            else
+                return reject('One or more account ids was incorrect!');
+
+        });
+
+        // if only one account id was passed, directly return the token instead of returning an array containing a single object
+        if(accountIds.length == 1) 
+            return resolve(tokens[0]);
+        // multiple account ids passed so we will have multiple tokens
+        else
+            resolve(tokens);
+        
     });
 
 };
-
 
 UserSchema.methods.changeMergedStatus = function (accountIds, status) {
     var user = this;

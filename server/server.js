@@ -54,7 +54,7 @@ app.get('/gdrive/saveToken', authenticate, (req, res) => {
 
 app.get('/gdrive/listFiles', authenticate, (req, res) => {
     
-    req.user.getAccountToken('5c0d1156324a601004b68fec').then((token) => {
+    req.user.getTokensForAccounts(["5c48a829af30db304092919f"]).then((token) => {
 
         gdriveHelper.getFilesForAccount(oAuth2Client_google, token).then((files) => {
             res.send(files);
@@ -64,23 +64,29 @@ app.get('/gdrive/listFiles', authenticate, (req, res) => {
 
 });
 
-app.get('/splitUpload', (req, res) => {
+app.get('/splitUpload', authenticate, (req, res) => {
 
-    utils.getTokensData().then((tokensData) => {
+    req.user.getAccounts().then((accounts) => {
         
-        var fileName = __dirname + '/a.rar';
-        var readStream = fs.createReadStream(fileName);
-        var stats = fs.statSync(fileName);
-        var fileSizeInBytes = stats["size"];
+        mergedAccounts = _.filter(accounts, account => account.merged);
+        
+        if(mergedAccounts.length != 0)
+            req.user.getTokensForAccounts(mergedAccounts).then((tokens) => {
+                
+                var fileName = __dirname + '/a.rar';
+                var readStream = fs.createReadStream(fileName);
+                var stats = fs.statSync(fileName);
+                var fileSizeInBytes = stats["size"];
 
-        splitter.splitFileAndUpload(tokensData, readStream, fileSizeInBytes, res, oAuth2Client_google);
+                splitter.splitFileAndUpload(tokens, readStream, fileSizeInBytes, res, oAuth2Client_google);
 
-    }, (err) => {
-        res.render('error.hbs', { err });
-    }).catch((err) => {
-        console.log(err);
+            });
+        else
+            res.send('No accounts are merged!');
+        
+
     });
-    
+
 });
 
 app.post('/users/login', (req, res) => {
