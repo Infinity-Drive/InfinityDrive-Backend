@@ -1,0 +1,35 @@
+{
+  "name": "infinitydrive",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mhd3v/InfinityDrive.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mhd3v/InfinityDrive/issues"
+  },
+  "homepage": "https://github.com/mhd3v/InfinityDrive#readme",
+  "dependencies": {
+    "async": "^2.6.1",
+    "express": "^4.16.4",
+    "express-session": "^1.15.6",
+    "googleapis": "^34.0.0",
+    "hbs": "^4.0.1",
+    "passport": "^0.4.0",
+    "passport-azure-ad": "^4.0.0",
+    "superagent": "^4.0.0-beta.5",
+    "uuid": "^3.3.2",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^8.4.0",
+    "lodash": "^4.17.11",
+    "mongoose": "^5.3.14",
+    "validator": "^10.9.0"
+  }
+}
