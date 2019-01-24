@@ -90,6 +90,21 @@ app.get('/splitUpload', authenticate, (req, res) => {
 
 });
 
+app.get('/gdrive/download', authenticate, (req, res) => {
+
+    req.user.getTokensForAccounts(['5c498413df714625f43aeba3']).then((token) => {
+    
+        gdriveHelper.download(oAuth2Client_google, token, '0B1yQid_w12U5TGpseFBLZ3RZZFVSVktzLWVyY2xfNWM2a1hR', '20180905_153617', res)
+        .then((file) => {
+            res.send(file);
+        }, (err) => {
+            res.send(err);
+        })
+
+    }, (e) => res.send(e)).catch((e) => res.send(e));
+
+});
+
 app.post('/users/login', (req, res) => {
 
     var body = _.pick(req.body, ['email', 'password']);

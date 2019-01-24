@@ -24,7 +24,7 @@ splitFileAndUpload = (tokens, readStream, fileSizeInBytes, res, oAuth2Client_goo
         if (currentWriteStreamSize > maxWriteStreamSize || lastChunk) {
 
             if (tokens[currentStreamIndex].accountType == 'gdrive')
-                gdriveHelper.upload(oAuth2Client_google, `file${currentStreamIndex}`, writeStreams[currentStreamIndex], writeStreams.length, res, lastChunk);  //upload finished stream
+                gdriveHelper.upload(oAuth2Client_google, `file${currentStreamIndex}`, writeStreams[currentStreamIndex], res, lastChunk);  //upload finished stream
             
             //else if (account.get(i) == 'onedrive')
             //
