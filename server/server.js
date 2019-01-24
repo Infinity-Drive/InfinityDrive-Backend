@@ -53,34 +53,56 @@ app.get('/gdrive/saveToken', authenticate, (req, res) => {
 });
 
 app.get('/gdrive/listFiles', authenticate, (req, res) => {
-    
-    req.user.getAccountToken('5c0d1156324a601004b68fec').then((token) => {
 
+    var body = _.pick(req.body, ['accountId']);
+    
+    req.user.getTokensForAccounts([body.accountId]).then((token) => {
+        
         gdriveHelper.getFilesForAccount(oAuth2Client_google, token).then((files) => {
             res.send(files);
-        }, (e) => res.send(e));
+        }, (e) => res.status(400).send(e));
 
-    }, (e) => res.send(e));
+    }, (e) => res.status(400).send(e));
 
 });
 
-app.get('/splitUpload', (req, res) => {
+app.get('/splitUpload', authenticate, (req, res) => {
 
-    utils.getTokensData().then((tokensData) => {
+    req.user.getAccounts().then((accounts) => {
         
-        var fileName = __dirname + '/a.rar';
-        var readStream = fs.createReadStream(fileName);
-        var stats = fs.statSync(fileName);
-        var fileSizeInBytes = stats["size"];
+        mergedAccounts = _.filter(accounts, account => account.merged);
+        
+        if(mergedAccounts.length >= 2)
+            req.user.getTokensForAccounts(mergedAccounts).then((tokens) => {
+                
+                var fileName = __dirname + '/a.rar';
+                var readStream = fs.createReadStream(fileName);
+                var stats = fs.statSync(fileName);
+                var fileSizeInBytes = stats["size"];
 
-        splitter.splitFileAndUpload(tokensData, readStream, fileSizeInBytes, res, oAuth2Client_google);
+                splitter.splitFileAndUpload(tokens, readStream, fileSizeInBytes, res, oAuth2Client_google);
 
-    }, (err) => {
-        res.render('error.hbs', { err });
-    }).catch((err) => {
-        console.log(err);
+            });
+        else
+            res.status(400).send('Two or more accounts need to merged in order to split upload!');
+        
     });
+
+});
+
+app.get('/gdrive/download', authenticate, (req, res) => {
+
+    req.user.getTokensForAccounts(['5c498413df714625f43aeba3']).then((token) => {
     
+        gdriveHelper.download(oAuth2Client_google, token, '0B1yQid_w12U5TGpseFBLZ3RZZFVSVktzLWVyY2xfNWM2a1hR', '20180905_153617', res)
+        .then((file) => {
+            res.send(file);
+        }, (err) => {
+            res.send(err);
+        })
+
+    }, (e) => res.send(e)).catch((e) => res.send(e));
+
 });
 
 app.post('/users/login', (req, res) => {
@@ -112,6 +134,16 @@ app.post('/users', (req, res) => {
         res.status(400).send(err);
     });
 
+});
+
+app.get('/users/getAccounts', authenticate, (req, res) => {
+    req.user.getAccounts().then((accounts) => res.send(accounts), (err) => res.send(err));
+});
+
+app.post('/users/manage/accounts/merge', authenticate, (req, res) => {
+    // accountIds is an array that will hold the object ids of the accounts to be updated
+    var body = _.pick(req.body, ['accountIds', 'status']);
+    req.user.changeMergedStatus(body.accountIds, body.status).then((msg) => res.send(msg), (err) => res.send(err));
 });
 
 app.listen('3000', () => {

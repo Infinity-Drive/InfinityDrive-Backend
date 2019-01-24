@@ -1,16 +1,16 @@
 const fs = require('fs');
 const gdriveHelper = require('./utils/gdriveHelper');
 
-splitFileAndUpload = (tokensData, readStream, fileSizeInBytes, res, oAuth2Client_google) => {
+splitFileAndUpload = (tokens, readStream, fileSizeInBytes, res, oAuth2Client_google) => {
     
     var currentWriteStreamSize = 0;
     var currentStreamIndex = 0;
     var totalRead = 0;
     var lastChunk = false;
     var writeStreams = [];
-    var maxWriteStreamSize = Math.ceil(fileSizeInBytes / tokensData.length);
+    var maxWriteStreamSize = Math.ceil(fileSizeInBytes / tokens.length);
 
-    for (var i = 0; i < tokensData.length; i++)
+    for (var i = 0; i < tokens.length; i++)
         writeStreams.push(fs.createWriteStream(`file${i}.bin`));
     
     readStream.on('data', async (chunk) => {
@@ -23,8 +23,8 @@ splitFileAndUpload = (tokensData, readStream, fileSizeInBytes, res, oAuth2Client
 
         if (currentWriteStreamSize > maxWriteStreamSize || lastChunk) {
 
-            if (tokensData[currentStreamIndex].type == 'gdrive')
-                gdriveHelper.upload(oAuth2Client_google, `file${currentStreamIndex}`, writeStreams[currentStreamIndex], writeStreams.length, res, lastChunk);  //upload finished stream
+            if (tokens[currentStreamIndex].accountType == 'gdrive')
+                gdriveHelper.upload(oAuth2Client_google, `file${currentStreamIndex}`, writeStreams[currentStreamIndex], res, lastChunk);  //upload finished stream
             
             //else if (account.get(i) == 'onedrive')
             //
@@ -41,8 +41,8 @@ splitFileAndUpload = (tokensData, readStream, fileSizeInBytes, res, oAuth2Client
                 currentWriteStreamSize = 0; //reset size for new stream
                 currentStreamIndex ++; //get next stream index
                 
-                if (tokensData[currentStreamIndex].type == 'gdrive')
-                    oAuth2Client_google.setCredentials(tokensData[currentStreamIndex].token); //update token, i.e. set for different account
+                if (tokens[currentStreamIndex].accountType == 'gdrive')
+                    oAuth2Client_google.setCredentials(tokens[currentStreamIndex]); //update token, i.e. set for different account
 
                 console.log(`piping stream ${currentStreamIndex}`);
                 readStream.pipe(writeStreams[currentStreamIndex]);
@@ -57,7 +57,7 @@ splitFileAndUpload = (tokensData, readStream, fileSizeInBytes, res, oAuth2Client
     });
 
     readStream.pipe(writeStreams[currentStreamIndex]);  //start piping in 1st writable stream
-    oAuth2Client_google.setCredentials(tokensData[currentStreamIndex].token);    //set token for 1st account in 1st writable stream
+    oAuth2Client_google.setCredentials(tokens[currentStreamIndex]);    //set token for 1st account in 1st writable stream
 
 }
 

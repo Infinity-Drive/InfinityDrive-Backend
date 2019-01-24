@@ -117,14 +117,91 @@ UserSchema.methods.addAccount = function (token, accountType, email) {
     
 };
 
-UserSchema.methods.getAccountToken = function (accountId) {
+UserSchema.methods.getAccounts = function () {
     var user = this;
     
     return new Promise((resolve, reject) => {
-        if(user.accounts.id(accountId))
-            resolve(user.accounts.id(accountId).token);
 
+        // omit the account token for security
+
+        if(user.accounts.length != 0){
+            accounts = _.map(user.accounts, account => {
+                return _.omit(account.toObject(), ['token']);
+            });
+        
+            return resolve(accounts);
+        }
+        
         reject('No account found!');
+    });
+
+};
+
+// get token for multiple/single account(s)
+UserSchema.methods.getTokensForAccounts = function (accountIds) {
+    var user = this;
+    var tokens = [];
+    
+    return new Promise((resolve, reject) => {
+
+        // if object id of an ADDED ACCOUNT is same as passed ID
+        accountIds.forEach(accountId => {
+            
+            if(user.accounts.id(accountId)){
+                
+                //get current account token
+                var token = user.accounts.id(accountId).token;
+                
+                // need to add accountType in an individual token when we have multiple tokens but don't know of which account
+                token['accountType'] = user.accounts.id(accountId).accountType;
+                tokens.push(token);
+            }  
+    
+            else
+                return reject('One or more account ids was incorrect!');
+
+        });
+        
+        // if only one account id was passed, directly return the token instead of returning an array containing a single object
+        if(accountIds.length == 1) 
+            return resolve(tokens[0]);
+        // multiple account ids passed so we will have multiple tokens
+        else
+            resolve(tokens);
+        
+    });
+
+};
+
+UserSchema.methods.changeMergedStatus = function (accountIds, status) {
+    var user = this;
+    var error = false;
+    
+    return new Promise((resolve, reject) => {
+        
+        accountIds.forEach(accountId => {
+            
+            if(user.accounts.id(accountId)){
+                var account = user.accounts.id(accountId);
+                account.merged = status;
+            }
+    
+            else
+                error = true;
+
+        });
+
+        // we only update the accounts, if we were able to find all accounts
+        if(!error) 
+            user.save().then(() => {
+                return resolve('Updated accounts!');
+            }, (e) => {
+                reject(e);
+            });
+        
+        else
+            reject('One or more account ids was incorrect!');
+        
     });
 
 };

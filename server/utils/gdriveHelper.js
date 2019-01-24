@@ -1,6 +1,9 @@
 const fs = require('fs');
 const utils = require('./utils');
 const { google } = require('googleapis');
+const os = require('os');
+const uuid = require('uuid');
+const path = require('path');
 
 const SCOPES = ['https://www.googleapis.com/auth/drive',
                 'https://www.googleapis.com/auth/userinfo.email',
@@ -75,7 +78,7 @@ var getFilesForAccount = (auth, token) => {
 
 }
 
-var upload = (auth, fileName, readStream, totalChunks, res, lastChunk) => {
+var upload = (auth, fileName, readStream, res, lastChunk) => {
     console.log(`uploading ${fileName}`);
     const drive = google.drive({ version: 'v3', auth });
     var fileMetadata = {
@@ -96,9 +99,45 @@ var upload = (auth, fileName, readStream, totalChunks, res, lastChunk) => {
             if (lastChunk) 
                 res.render('upload-success.hbs');
             
-            console.log('File Id: ', file.id);
+            console.log('File Id: ', file.data.id);
         }
     });
 }
 
-module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount, upload}
+// reference: https://github.com/googleapis/google-api-nodejs-client/blob/master/samples/drive/download.js
+function download(auth, token, fileId, name, response) {
+
+    auth.setCredentials(token);
+    const drive = google.drive({ version: 'v3', auth });
+
+    return new Promise(async (resolve, reject) => {
+        const filePath = path.join(os.tmpdir(), uuid.v4());
+        console.log(`writing to ${filePath}`);
+        const dest = fs.createWriteStream(filePath);
+        let progress = 0;
+        const res = await drive.files.get(
+          {fileId, alt: 'media'},
+          {responseType: 'stream'}
+        );
+        res.data
+          .on('end', () => {
+            console.log('Done downloading file.');
+            resolve(filePath);
+          })
+          .on('error', err => {
+            console.error('Error downloading file.');
+            reject(err);
+          })
+          .on('data', d => {
+            progress += d.length;
+            if (process.stdout.isTTY) {
+              process.stdout.clearLine();
+              process.stdout.cursorTo(0);
+              process.stdout.write(`Downloaded ${progress} bytes`);
+            }
+          })
+          .pipe(dest);
+      });
+}
+
+module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount, upload, download}
