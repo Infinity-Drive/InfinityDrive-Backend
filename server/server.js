@@ -53,14 +53,16 @@ app.get('/gdrive/saveToken', authenticate, (req, res) => {
 });
 
 app.get('/gdrive/listFiles', authenticate, (req, res) => {
-    
-    req.user.getTokensForAccounts(["5c48a829af30db304092919f"]).then((token) => {
 
+    var body = _.pick(req.body, ['accountId']);
+    
+    req.user.getTokensForAccounts([body.accountId]).then((token) => {
+        
         gdriveHelper.getFilesForAccount(oAuth2Client_google, token).then((files) => {
             res.send(files);
-        }, (e) => res.send(e));
+        }, (e) => res.status(400).send(e));
 
-    }, (e) => res.send(e));
+    }, (e) => res.status(400).send(e));
 
 });
 
@@ -70,7 +72,7 @@ app.get('/splitUpload', authenticate, (req, res) => {
         
         mergedAccounts = _.filter(accounts, account => account.merged);
         
-        if(mergedAccounts.length != 0)
+        if(mergedAccounts.length >= 2)
             req.user.getTokensForAccounts(mergedAccounts).then((tokens) => {
                 
                 var fileName = __dirname + '/a.rar';
@@ -82,9 +84,8 @@ app.get('/splitUpload', authenticate, (req, res) => {
 
             });
         else
-            res.send('No accounts are merged!');
+            res.status(400).send('Two or more accounts need to merged in order to split upload!');
         
-
     });
 
 });

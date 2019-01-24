@@ -96,9 +96,6 @@ UserSchema.methods.addAccount = function (token, accountType, email) {
         var user = this; 
         var alreadyAdded = false;
 
-        // need to add accountType in an individual token when we have multiple tokens but don't know of which account
-        token['accountType'] = accountType;
-
         user.accounts.forEach(function(account) {
             if(account.email === email && account.accountType === accountType)
                 alreadyAdded = true;
@@ -150,14 +147,21 @@ UserSchema.methods.getTokensForAccounts = function (accountIds) {
         // if object id of an ADDED ACCOUNT is same as passed ID
         accountIds.forEach(accountId => {
             
-            if(user.accounts.id(accountId))
-                tokens.push(user.accounts.id(accountId).token);
+            if(user.accounts.id(accountId)){
+                
+                //get current account token
+                var token = user.accounts.id(accountId).token;
+                
+                // need to add accountType in an individual token when we have multiple tokens but don't know of which account
+                token['accountType'] = user.accounts.id(accountId).accountType;
+                tokens.push(token);
+            }  
     
             else
                 return reject('One or more account ids was incorrect!');
 
         });
-
+        
         // if only one account id was passed, directly return the token instead of returning an array containing a single object
         if(accountIds.length == 1) 
             return resolve(tokens[0]);
