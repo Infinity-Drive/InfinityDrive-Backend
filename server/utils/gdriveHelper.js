@@ -1,5 +1,4 @@
 const fs = require('fs');
-const utils = require('./utils');
 const { google } = require('googleapis');
 const os = require('os');
 const uuid = require('uuid');
