@@ -1,4 +1,5 @@
 var fetch = require('isomorphic-fetch');
+var fetch = require('isomorphic-fetch');
 
 const config = {
   fetch: fetch,
@@ -15,47 +16,36 @@ var getAuthorizationUrl = () => {
   return dbx.getAuthenticationUrl(redirectUri, null, 'code')
 }
 
-var saveToken = (req, res, user) => {
+var saveToken = async (req, user) => {
 
   let code = req.query.code;
-  console.log(code);
 
   var options = Object.assign({
     code,
     redirectUri
   }, config);
 
-  dbx.getAccessTokenFromCode(redirectUri, code)
-    .then(function (token) {
+  const token = await dbx.getAccessTokenFromCode(redirectUri, code);
 
-      user.addAccount({ 'access_token': token }, 'dropbox', 'email').then((accounts) => {
-        res.send(user.accounts);
-      }, (err) => res.send(err));
+  // requesting dropbox API for account information for current token
+  // this holds the user's email address
+  const response = await fetch('https://api.dropboxapi.com/2/users/get_current_account', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
 
-    })
-    .catch(function (error) {
-      res.send(error);
-    });
+  if (!(response.status >= 400)) {
+    var accountInfo = await response.json();
+    return await user.addAccount({ 'access_token': token }, 'dropbox', accountInfo.email);
+  }
+  else 
+    return Promise.reject('Failed to reach dropbox servers!');
+
 }
 
-var getFilesForAccount = (token) => {
-
+var getFilesForAccount = async (token) => {
   var dbx = new Dropbox({ accessToken: token.access_token, fetch: fetch });
-
-  return new Promise((resolve, reject) => {
-
-    dbx.filesListFolder({ path: '' })
-
-      .then(function (response) {
-        return resolve(response);
-      })
-
-      .catch(function (error) {
-        reject(error);
-      });
-
-  })
-
+  return await dbx.filesListFolder({ path: '' })
 }
 
 module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount }

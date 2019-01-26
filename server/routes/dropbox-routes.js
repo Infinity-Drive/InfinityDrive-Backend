@@ -12,20 +12,20 @@ router
     })
 
     .get('/saveToken', authenticate, (req, res) => {
-        dropboxHelper.saveToken(req, res, req.user);
+        dropboxHelper.saveToken(req, req.user).then((accounts) => {
+            res.send(accounts);
+        }).catch((e) => res.send(e));
     })
 
-    .get('/listFiles', authenticate, (req, res) => {
-
+    .get('/listFiles', authenticate, async (req, res) => {
+        
         var body = _.pick(req.body, ['accountId']);
-
-        req.user.getTokensForAccounts([body.accountId]).then((token) => {
-
-            dropboxHelper.getFilesForAccount(token).then((files) => {
-                res.send(files);
-            }, (e) => res.status(400).send(e));
-
-        }, (e) => res.status(400).send(e)).catch((e) => console.log(e));
+        try {
+            const token = await req.user.getTokensForAccounts([body.accountId]);
+            res.send(await dropboxHelper.getFilesForAccount(token));
+        } catch (error) {
+            res.send(error);
+        }
 
     })
 
