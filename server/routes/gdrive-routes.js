@@ -8,7 +8,7 @@ var oAuth2Client_google;
 var express = require('express'),
     router = express.Router();
 
-const gdriveHelper = require('../utils/gdriveHelper');
+const gdriveHelper = require('../utils/gdrive-helper');
 
 router
     .use((req, res, next) => {   //this runs before each route

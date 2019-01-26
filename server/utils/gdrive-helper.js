@@ -96,7 +96,7 @@ var upload = (auth, fileName, readStream, res, lastChunk) => {
         } else {
 
             if (lastChunk) 
-                res.render('upload-success.hbs');
+                res.send('Upload success');
             
             console.log('File Id: ', file.data.id);
         }
