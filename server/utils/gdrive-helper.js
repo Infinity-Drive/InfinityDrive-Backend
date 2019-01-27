@@ -104,7 +104,7 @@ var upload = (auth, fileName, readStream, res, lastChunk) => {
 }
 
 // reference: https://github.com/googleapis/google-api-nodejs-client/blob/master/samples/drive/download.js
-function download(auth, token, fileId, name, response) {
+var download = async(auth, token, fileId, name, response) => {
 
     auth.setCredentials(token);
     const drive = google.drive({ version: 'v3', auth });
@@ -139,4 +139,8 @@ function download(auth, token, fileId, name, response) {
       });
 }
 
-module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount, upload, download}
+var getDownloadUrl = (token, fileId) => {
+    return `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&access_token=${token.access_token}`;
+}
+
+module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount, upload, download, getDownloadUrl}

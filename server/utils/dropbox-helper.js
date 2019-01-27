@@ -1,5 +1,4 @@
 var fetch = require('isomorphic-fetch');
-var fetch = require('isomorphic-fetch');
 
 const config = {
   fetch: fetch,
@@ -38,7 +37,7 @@ var saveToken = async (req, user) => {
     var accountInfo = await response.json();
     return await user.addAccount({ 'access_token': token }, 'dropbox', accountInfo.email);
   }
-  else 
+  else
     return Promise.reject('Failed to reach dropbox servers!');
 
 }
@@ -48,4 +47,9 @@ var getFilesForAccount = async (token) => {
   return await dbx.filesListFolder({ path: '' })
 }
 
-module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount }
+var getDownloadUrl = async (token, fileId) => {
+  var dbx = new Dropbox({ accessToken: token.access_token, fetch: fetch });
+  return await dbx.filesGetTemporaryLink({path: `id:${fileId}`});
+}
+
+module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount, getDownloadUrl }

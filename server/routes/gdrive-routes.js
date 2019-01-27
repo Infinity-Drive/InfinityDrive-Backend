@@ -50,19 +50,10 @@ router
 
     })
 
-    .get('/download', authenticate, (req, res) => {
-
-        req.user.getTokensForAccounts(['5c498413df714625f43aeba3']).then((token) => {
-
-            gdriveHelper.download(oAuth2Client_google, token, '0B1yQid_w12U5TGpseFBLZ3RZZFVSVktzLWVyY2xfNWM2a1hR', '20180905_153617', res)
-                .then((file) => {
-                    res.send(file);
-                }, (err) => {
-                    res.send(err);
-                })
-
+    .get('/downloadUrl', authenticate, (req, res) => {
+       req.user.getTokensForAccounts(['5c4d842f78e6ae29eca1b290']).then((token) => {
+            res.send(gdriveHelper.getDownloadUrl(token, '1iWUSc5HzO5tCPpkqEziA6FB8OIhYHXNW'));
         }, (e) => res.send(e)).catch((e) => res.send(e));
-
     })
 
 module.exports = router;
