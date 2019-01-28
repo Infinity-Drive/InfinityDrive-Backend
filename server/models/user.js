@@ -209,11 +209,28 @@ UserSchema.methods.changeMergedStatus = function (accountIds, status) {
 
 UserSchema.methods.removeToken = function (token) {
     var user = this;
-
-    return user.update({
+    return user.updateOne({
         $pull: {    //pull operator lets us pull out a wanted object 
             tokens: {   //pull from token array the token object with the same properties as the token passed into the method
                 token: token   //whole token object is remove
+            }
+        }
+    });
+};
+
+UserSchema.methods.removeAccount = function (accountId) {
+    var user = this;
+
+    if(!(user.accounts.id(accountId)))
+        return Promise.reject('Account not found!');
+
+    if(user.accounts.id(accountId).merged)
+        return Promise.reject('Cannot remove a merged account!');
+
+    return user.updateOne({
+        $pull: {
+            accounts: { 
+                '_id': accountId   
             }
         }
     });
