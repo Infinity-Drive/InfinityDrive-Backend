@@ -1,5 +1,5 @@
 const fs = require('fs');
-const gdriveHelper = require('./utils/gdriveHelper');
+const gdriveHelper = require('./utils/gdrive-helper');
 
 splitFileAndUpload = (tokens, readStream, fileSizeInBytes, res, oAuth2Client_google) => {
     

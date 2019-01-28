@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const { ObjectID } = require('mongodb');
 
 var {User} = require('../models/user');
 var {authenticate} = require('../middleware/authenticate');
@@ -43,11 +44,22 @@ router
         req.user.getAccounts().then((accounts) => res.send(accounts), (err) => res.send(err));
     })
 
-    .post('/manage/accounts/merge', authenticate, (req, res) => {
+    .patch('/manage/accounts/merge', authenticate, (req, res) => {
         // accountIds is an array that will hold the object ids of the accounts to be updated
         var body = _.pick(req.body, ['accountIds', 'status']);
         req.user.changeMergedStatus(body.accountIds, body.status).then((msg) => res.send(msg), (err) => res.send(err));
     })
+
+    .delete('/remove/:accountId', authenticate, (req, res) => { //url param defined by :anyVarName
+    
+        var accountId = req.params.accountId;
+    
+        if(!ObjectID.isValid(accountId))
+            return res.status(404).send('Account ID not valid!');
+        
+        req.user.removeAccount(accountId).then((result) => res.send('Removed account!')).catch((e) => res.send(e));
+       
+    });
 
 
 module.exports = router;

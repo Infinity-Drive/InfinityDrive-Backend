@@ -7,32 +7,32 @@ var readStream = fs.createReadStream('file0.bin');
 var readStream1 = fs.createReadStream('file1.bin');
 var readStream2 = fs.createReadStream('file2.bin');
 
-var dest=fs.createWriteStream('b.mkv');
+var dest = fs.createWriteStream('b.mkv');
 
 
 // var Promises = require('promise');
 var promise = new Promise(function (resolve, reject) {
     // do some async stuff
-    
-        readStream.pipe(dest,{end:false});
-        readStream.on('end', () => {
-            readStream.unpipe(dest);
-            resolve("ab");
-          });
-        console.log("1");
-         
+
+    readStream.pipe(dest, { end: false });
+    readStream.on('end', () => {
+        readStream.unpipe(dest);
+        resolve("ab");
+    });
+    console.log("1");
+
 });
 promise.then(function (data) {
     // function called when first promise returned
     return new Promise(function (resolve, reject) {
         // second async stuff
-        
-            readStream1.pipe(dest,{end:false});
-            readStream1.on('end', () => {
-                resolve("ab");
-              });
-              console.log("2");
-        
+
+        readStream1.pipe(dest, { end: false });
+        readStream1.on('end', () => {
+            resolve("ab");
+        });
+        console.log("2");
+
     });
 }, function (reason) {
     // error handler
@@ -41,7 +41,7 @@ promise.then(function (data) {
     // second success handler
     readStream2.pipe(dest);
 
-    readStream2.on('end',()=>{
+    readStream2.on('end', () => {
         dest.end();
     })
     console.log("3");

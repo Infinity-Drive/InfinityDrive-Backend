@@ -4,18 +4,18 @@ const jwt = require('jsonwebtoken');
 const _ = require('lodash');
 const bcrypt = require('bcryptjs');
 
-mongoose.connect('mongodb://localhost:27017/InfinityDrive', {useNewUrlParser: true});
+mongoose.connect('mongodb://localhost:27017/InfinityDrive', { useNewUrlParser: true });
 mongoose.set('useCreateIndex', true);
 
 var UserSchema = new mongoose.Schema({
-    verficationToken: {type: String},
+    verficationToken: { type: String },
 
     name: {
         type: String,
         minlength: 1,
         trim: true
     },
-    
+
     email: {
         type: String,
         required: true,
@@ -23,7 +23,7 @@ var UserSchema = new mongoose.Schema({
         trim: true,
         unique: true,                               //this ensures that only unqiue emails (that don't exist in the db can be added)
         validate: {
-            validator : validator.isEmail,          //validator expects a fuction that will either return true or false
+            validator: validator.isEmail,          //validator expects a fuction that will either return true or false
             message: "{VALUE} is not a valid email"
         }
     },
@@ -46,8 +46,8 @@ var UserSchema = new mongoose.Schema({
         }
     }],
 
-    accounts: [{   
-        merged: { 
+    accounts: [{
+        merged: {
             type: Boolean,
             default: false
         },
@@ -65,13 +65,13 @@ var UserSchema = new mongoose.Schema({
         }
     }],
 
-    splitDirectoryId: {type: String}
+    splitDirectoryId: { type: String }
 });
 
 UserSchema.methods.toJSON = function () {    //overriding built in method (we want user to only get limited info back)
     var user = this;
     var userObject = user.toObject(); //mongoose object to java script obj
-    
+
     return _.pick(userObject, ['_id', 'email']);    //dont send security related data back to user
 };
 
@@ -79,10 +79,10 @@ UserSchema.methods.generateAuthToken = function () {    //can add any instance m
     //this method run for a given user object. that is, we run after the doc has been inserted into the db
     var user = this; //we didnt use a cb function since we want to use 'this'
     var access = 'auth';
-    var token = jwt.sign({_id: user._id.toHexString(), access}, 'my secret').toString();
+    var token = jwt.sign({ _id: user._id.toHexString(), access }, 'my secret').toString();
 
     //user.tokens.concat([{access, token}]); //concat into the tokens array
-    user.tokens.push({access, token});
+    user.tokens.push({ access, token });
 
     return user.save().then(() => {     //we're returning this promise so that we can catch it in server.js using a chained promise
         return token;
@@ -93,20 +93,20 @@ UserSchema.methods.addAccount = function (token, accountType, email) {
 
     return new Promise((resolve, reject) => {
 
-        var user = this; 
+        var user = this;
         var alreadyAdded = false;
 
-        user.accounts.forEach(function(account) {
-            if(account.email === email && account.accountType === accountType)
+        user.accounts.forEach(function (account) {
+            if (account.email === email && account.accountType === accountType)
                 alreadyAdded = true;
         });
 
-        if(alreadyAdded){
+        if (alreadyAdded) {
             reject('Account already exists');
         }
 
-        else{
-            user.accounts.push({accountType, token, email});
+        else {
+            user.accounts.push({ accountType, token, email });
 
             user.save().then(() => {     //we're returning this promise so that we can catch it in server.js using a chained promise
                 resolve(user.accounts);
@@ -114,24 +114,24 @@ UserSchema.methods.addAccount = function (token, accountType, email) {
         }
 
     });
-    
+
 };
 
 UserSchema.methods.getAccounts = function () {
     var user = this;
-    
+
     return new Promise((resolve, reject) => {
 
         // omit the account token for security
 
-        if(user.accounts.length != 0){
+        if (user.accounts.length != 0) {
             accounts = _.map(user.accounts, account => {
                 return _.omit(account.toObject(), ['token']);
             });
-        
+
             return resolve(accounts);
         }
-        
+
         reject('No account found!');
     });
 
@@ -141,34 +141,34 @@ UserSchema.methods.getAccounts = function () {
 UserSchema.methods.getTokensForAccounts = function (accountIds) {
     var user = this;
     var tokens = [];
-    
+
     return new Promise((resolve, reject) => {
 
         // if object id of an ADDED ACCOUNT is same as passed ID
         accountIds.forEach(accountId => {
-            
-            if(user.accounts.id(accountId)){
-                
+
+            if (user.accounts.id(accountId)) {
+
                 //get current account token
                 var token = user.accounts.id(accountId).token;
-                
+
                 // need to add accountType in an individual token when we have multiple tokens but don't know of which account
                 token['accountType'] = user.accounts.id(accountId).accountType;
                 tokens.push(token);
-            }  
-    
+            }
+
             else
-                return reject('One or more account ids was incorrect!');
+                return reject('One or more account ids was not found!');
 
         });
-        
+
         // if only one account id was passed, directly return the token instead of returning an array containing a single object
-        if(accountIds.length == 1) 
+        if (accountIds.length == 1)
             return resolve(tokens[0]);
         // multiple account ids passed so we will have multiple tokens
         else
             resolve(tokens);
-        
+
     });
 
 };
@@ -176,32 +176,32 @@ UserSchema.methods.getTokensForAccounts = function (accountIds) {
 UserSchema.methods.changeMergedStatus = function (accountIds, status) {
     var user = this;
     var error = false;
-    
+
     return new Promise((resolve, reject) => {
-        
+
         accountIds.forEach(accountId => {
-            
-            if(user.accounts.id(accountId)){
+
+            if (user.accounts.id(accountId)) {
                 var account = user.accounts.id(accountId);
                 account.merged = status;
             }
-    
+
             else
                 error = true;
 
         });
 
         // we only update the accounts, if we were able to find all accounts
-        if(!error) 
+        if (!error)
             user.save().then(() => {
                 return resolve('Updated accounts!');
             }, (e) => {
                 reject(e);
             });
-        
+
         else
             reject('One or more account ids was incorrect!');
-        
+
     });
 
 };
@@ -209,25 +209,42 @@ UserSchema.methods.changeMergedStatus = function (accountIds, status) {
 
 UserSchema.methods.removeToken = function (token) {
     var user = this;
-
-    return user.update({
+    return user.updateOne({
         $pull: {    //pull operator lets us pull out a wanted object 
             tokens: {   //pull from token array the token object with the same properties as the token passed into the method
-                token : token   //whole token object is remove
+                token: token   //whole token object is remove
+            }
+        }
+    });
+};
+
+UserSchema.methods.removeAccount = function (accountId) {
+    var user = this;
+
+    if(!(user.accounts.id(accountId)))
+        return Promise.reject('Account not found!');
+
+    if(user.accounts.id(accountId).merged)
+        return Promise.reject('Cannot remove a merged account!');
+
+    return user.updateOne({
+        $pull: {
+            accounts: { 
+                '_id': accountId   
             }
         }
     });
 };
 
 //define Model method (not an instance method like generateAuthToken), i.e. static method
-UserSchema.statics.findByToken = function(token) {
+UserSchema.statics.findByToken = function (token) {
     var User = this;
     var decoded;
 
-    try{
-       decoded = jwt.verify(token, 'my secret');
+    try {
+        decoded = jwt.verify(token, 'my secret');
     }
-    catch(e) {  //if theres a problem, we will return a promise that is caught by server.js
+    catch (e) {  //if theres a problem, we will return a promise that is caught by server.js
         // return new Promise((resolve, reject) => {
         //     reject();
         // }); 
@@ -247,21 +264,21 @@ UserSchema.statics.findByCredentials = function (email, password) {
 
     var User = this;
 
-    return User.findOne({email}).then((user) => {
+    return User.findOne({ email }).then((user) => {
 
-        if(!user)
-        return Promise.reject();
+        if (!user)
+            return Promise.reject();
 
         return new Promise((resolve, reject) => {   //we're defining a new promise here since bcrypt doesn't support promises
 
             bcrypt.compare(password, user.password, (err, res) => {
-                
-                if(res)
-                resolve(user);
+
+                if (res)
+                    resolve(user);
 
                 else
-                reject();
-                
+                    reject();
+
             });
 
         });
@@ -270,11 +287,11 @@ UserSchema.statics.findByCredentials = function (email, password) {
 
 };
 
-UserSchema.pre('save', function(next) {   //mongoose middleware, this is going to run before save is called
+UserSchema.pre('save', function (next) {   //mongoose middleware, this is going to run before save is called
 
     var user = this;
-    
-    if(user.isModified('password')){    //checking to see if password is already hashed
+
+    if (user.isModified('password')) {    //checking to see if password is already hashed
 
         bcrypt.genSalt(10, (err, salt) => {
             bcrypt.hash(user.password, salt, (err, hash) => {
@@ -283,12 +300,12 @@ UserSchema.pre('save', function(next) {   //mongoose middleware, this is going t
             });
         });
     }
-       
-    else{
+
+    else {
         next();
     }
-});    
+});
 
 var User = mongoose.model('User', UserSchema);
 
-module.exports = {User};
+module.exports = { User };

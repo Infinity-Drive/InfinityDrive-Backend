@@ -1,10 +1,10 @@
 const express = require('express');
-const graphHelper = require('./utils/graphHelper');
+const graphHelper = require('../utils/graph-helper');
 const passport = require('passport');
 const OIDCStrategy = require('passport-azure-ad').OIDCStrategy;
 const uuid = require('uuid');
 const session = require('express-session');
-const config = require('./utils/config.js');
+const config = require('../utils/config.js');
 
 const app = express();
 app.set('view engine', 'hbs');

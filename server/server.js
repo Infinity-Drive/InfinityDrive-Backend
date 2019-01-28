@@ -10,11 +10,13 @@ const app = express();
 
 app.use(bodyParser.json()); //body parser lets us send json to our server
 
-gdriveRoutes = require('./routes/gdriveRoutes.js');
-userRoutes = require('./routes/userRoutes.js');
+gdriveRoutes = require('./routes/gdrive-routes.js');
+userRoutes = require('./routes/user-routes.js');
+dropboxRoutes = require('./routes/dropbox-routes.js');
 
 app.use('/gdrive', gdriveRoutes);
 app.use('/users', userRoutes);
+app.use('/dropbox', dropboxRoutes);
 
 app.get('/', (req, res) => {
     res.send('Welcome to Infinity Drive');
