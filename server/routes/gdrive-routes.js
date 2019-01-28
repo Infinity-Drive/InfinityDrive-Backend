@@ -1,5 +1,6 @@
 const { google } = require('googleapis');
 const _ = require('lodash');
+const { ObjectID } = require('mongodb');
 
 var { authenticate } = require('../middleware/authenticate');
 
@@ -36,22 +37,24 @@ router
         gdriveHelper.saveToken(req, res, oAuth2Client_google, req.user);
     })
 
-    .get('/listFiles', authenticate, (req, res) => {
+    .get('/listFiles/:accountId', authenticate, async (req, res) => {
 
-        var body = _.pick(req.body, ['accountId']);
+        var accountId = req.params.accountId;
+        if (!ObjectID.isValid(accountId))
+            return res.status(404).send('Account ID not valid!');
 
-        req.user.getTokensForAccounts([body.accountId]).then((token) => {
-
-            gdriveHelper.getFilesForAccount(oAuth2Client_google, token).then((files) => {
-                res.send(files);
-            }, (e) => res.status(400).send(e));
-
-        }, (e) => res.status(400).send(e));
+        try {
+            var token = await req.user.getTokensForAccounts([accountId]);
+            var files = await gdriveHelper.getFilesForAccount(oAuth2Client_google, token);
+            res.send(files);
+        } catch (error) {
+            return res.status(400).send(error);
+        }
 
     })
 
     .get('/downloadUrl', authenticate, (req, res) => {
-       req.user.getTokensForAccounts(['5c4d842f78e6ae29eca1b290']).then((token) => {
+        req.user.getTokensForAccounts(['5c4d842f78e6ae29eca1b290']).then((token) => {
             res.send(gdriveHelper.getDownloadUrl(token, '1iWUSc5HzO5tCPpkqEziA6FB8OIhYHXNW'));
         }, (e) => res.send(e)).catch((e) => res.send(e));
     })

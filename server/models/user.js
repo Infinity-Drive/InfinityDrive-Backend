@@ -158,7 +158,7 @@ UserSchema.methods.getTokensForAccounts = function (accountIds) {
             }
 
             else
-                return reject('One or more account ids was incorrect!');
+                return reject('One or more account ids was not found!');
 
         });
 
