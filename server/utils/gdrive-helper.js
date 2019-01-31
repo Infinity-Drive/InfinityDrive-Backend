@@ -54,28 +54,28 @@ var getUserEmail = async (auth) => {
 
 var getFilesForAccount = async (auth, token) => {
 
-        auth.setCredentials(token);
+    auth.setCredentials(token);
 
-        const drive = google.drive({ version: 'v3', auth }); // need to specify auth as auth: auth or auth: any_other_name
+    const drive = google.drive({ version: 'v3', auth }); // need to specify auth as auth: auth or auth: any_other_name
 
-        try {
+    try {
 
-            var res = await drive.files.list({
-                pageSize: 10,
-                fields: 'nextPageToken, files(id, name, mimeType)',
-                key: 'AIzaSyDHtla9ZqVhQm-dqEbFsM-sArr29XizGg4'
-            }).catch((e) => {throw 'Error getting files'});
+        var res = await drive.files.list({
+            pageSize: 10,
+            fields: 'nextPageToken, files(id, name, mimeType)',
+            key: 'AIzaSyDHtla9ZqVhQm-dqEbFsM-sArr29XizGg4'
+        }).catch((e) => { throw 'Error getting files' });
 
-            const files = res.data.files;
-            if (files.length)
-                return files;
-            else
-                throw 'No files found!';
+        const files = res.data.files;
+        if (files.length)
+            return files;
+        else
+            throw 'No files found!';
 
-        } catch (error) {
-            throw error;
-        }
-        
+    } catch (error) {
+        throw error;
+    }
+
 }
 
 var upload = (auth, fileName, readStream, res, lastChunk) => {
@@ -140,8 +140,26 @@ var download = async (auth, token, fileId, name, response) => {
     });
 }
 
-var getDownloadUrl = (token, fileId) => {
+var getDownloadUrl = async (user, accountId, auth, token, fileId) => {
+
+    auth.setCredentials(token);
+
+    const drive = google.drive({ version: 'v3', auth });
+
+    // only doing this, incase the token is expired/expiring, we can get an updated token
+    await drive.files.get({
+        fileId
+    });
+
+    //checking if old token was expired, in case it is, after making the above request we have the updated token in the db
+    if(auth.isTokenExpiring()){
+        // getting updated token
+        console.log('Getting updated token');
+        token = await user.getTokensForAccounts([accountId]);
+    } 
+       
     return `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&access_token=${token.access_token}`;
+    
 }
 
 module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount, upload, download, getDownloadUrl }
