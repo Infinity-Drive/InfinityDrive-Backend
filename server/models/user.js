@@ -91,7 +91,7 @@ UserSchema.methods.generateAuthToken = function () {    //can add any instance m
 };
 
 UserSchema.methods.addAccount = function (token, accountType, email) {
-
+    
     return new Promise((resolve, reject) => {
 
         var user = this;

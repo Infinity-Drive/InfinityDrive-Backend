@@ -17,13 +17,13 @@ router
     })
 
     .get('/authorize', (req, res) => {
-        var url = gdriveHelper.getAuthorizationUrl();
+        const url = gdriveHelper.getAuthorizationUrl();
         res.send(url);
     })
 
     .get('/saveToken', authenticate, async (req, res) => {
         try {
-            var accounts = await gdriveHelper.saveToken(req, req.user);
+            const accounts = await gdriveHelper.saveToken(req, req.user);
             res.send(accounts);
         } catch (error) {
             return res.status(400).send(error);
@@ -32,14 +32,14 @@ router
 
     .get('/listFiles/:accountId', authenticate, async (req, res) => {
 
-        var accountId = req.params.accountId;
+        const accountId = req.params.accountId;
         if (!ObjectID.isValid(accountId))
             return res.status(400).send('Account ID not valid!');
         
         try {
             var token = await req.user.getTokensForAccounts([accountId]);
             token = await gdriveHelper.verifyTokenValidity(token);
-            var files = await gdriveHelper.getFilesForAccount(token);
+            const files = await gdriveHelper.getFilesForAccount(token);
             res.send(files);
         } catch (error) {
             return res.status(400).send(error);
@@ -48,15 +48,31 @@ router
 
     .get('/downloadUrl/:accountId/:fileId', authenticate, async (req, res) => {
 
-        var accountId = req.params.accountId;
+        const accountId = req.params.accountId;
         if (!ObjectID.isValid(accountId))
             return res.status(400).send('Account ID not valid!');
         
         try {
             var token = await req.user.getTokensForAccounts([accountId]);
             token = await gdriveHelper.verifyTokenValidity(token);
-            var downloadUrl = await gdriveHelper.getDownloadUrl(token, req.params.fileId);
+            const downloadUrl = await gdriveHelper.getDownloadUrl(token, req.params.fileId);
             res.send(downloadUrl);
+        } catch (error) {
+            return res.status(400).send(error);
+        }
+    })
+
+    .get('/storageInfo/:accountId', authenticate, async (req, res) => {
+
+        const accountId = req.params.accountId;
+        if (!ObjectID.isValid(accountId))
+            return res.status(400).send('Account ID not valid!');
+        
+        try {
+            var token = await req.user.getTokensForAccounts([accountId]);
+            token = await gdriveHelper.verifyTokenValidity(token);
+            const storageInfo = await gdriveHelper.getStorageInfo(token);
+            res.send(storageInfo)
         } catch (error) {
             return res.status(400).send(error);
         }

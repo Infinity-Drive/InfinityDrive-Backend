@@ -4,9 +4,7 @@ const { gdriveCreds } = require('../config/config');
 const { User } = require('../models/user');
 const axios = require('axios');
 
-const SCOPES = ['https://www.googleapis.com/auth/drive',
-    'https://www.googleapis.com/auth/userinfo.email',
-    'https://www.googleapis.com/auth/userinfo.profile'];
+const SCOPES = ['https://www.googleapis.com/auth/drive'];
 
 var auth = new google.auth.OAuth2(gdriveCreds.client_id, gdriveCreds.client_secret, gdriveCreds.redirect_uri);
 
@@ -19,12 +17,11 @@ var saveToken = async (req, user) => {
         response = await auth.getToken(code).catch((e) => { throw 'Error getting token from Google Servers' });
         var token = response.tokens;
         auth.setCredentials(token);
-        var email = await getUserEmail(auth);
+        const email = await getUserInfo(auth);
         var accounts = await user.addAccount(token, 'gdrive', email);
         return accounts;
-    } catch (error) {
-        console.log(error);
-        throw error;
+    } catch (e) {
+        throw e;
     }
 }
 
@@ -40,16 +37,27 @@ var getAuthorizationUrl = () => {
     return url;
 }
 
-var getUserEmail = async () => {
-    var me;
-    try {
-        const plus = google.plus({ version: 'v1', auth });
-        me = await plus.people.get({ userId: 'me' });
-    } catch (error) {
-        throw 'Error getting user email!';
-    }
-    const userEmail = me.data.emails[0].value;
-    return userEmail;
+var getUserInfo = async (auth) => {
+    const drive = google.drive({ version: 'v3', auth });
+    const userInfoResponse = await drive.about.get({
+        fields: 'user'
+    }).catch((e) => {
+        console.log(e);
+        throw 'Error getting email from Google Servers';
+    });
+    return userInfoResponse.data.user.emailAddress;
+}
+
+var getStorageInfo = async (token) => {
+    auth.setCredentials(token);
+    const drive = google.drive({ version: 'v3', auth });
+    const userInfoResponse = await drive.about.get({
+        fields: 'storageQuota'
+    }).catch((e) => {
+        console.log(e);
+        throw 'Error getting storage info from Google Servers';
+    });
+    return userInfoResponse.data;
 }
 
 var getFilesForAccount = async (token) => {
@@ -62,7 +70,10 @@ var getFilesForAccount = async (token) => {
         pageSize: 10,
         fields: 'nextPageToken, files(id, name, mimeType)',
         key: 'AIzaSyDHtla9ZqVhQm-dqEbFsM-sArr29XizGg4'
-    }).catch((e) => { throw 'Error getting files' });
+    }).catch((e) => {
+        console.log(e);
+        throw 'Error getting files';
+    });
 
     const files = res.data.files;
     if (files.length)
@@ -103,7 +114,10 @@ var getDownloadUrl = async (token, fileId) => {
     const drive = google.drive({ version: 'v3', auth });
     await drive.files.get({
         fileId
-    }).catch((e) => { throw 'Unable to get file from Google' });
+    }).catch((e) => { 
+        console.log(e);
+        throw 'Unable to get file from Google';
+    });
 
     return `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&access_token=${token.access_token}`;
 }
@@ -161,4 +175,4 @@ var verifyTokenValidity = async (token) => {
     }
 }
 
-module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount, upload, getDownloadUrl, verifyTokenValidity }
+module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount, upload, getStorageInfo, getDownloadUrl, verifyTokenValidity }
