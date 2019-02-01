@@ -18,12 +18,6 @@ var getAuthorizationUrl = () => {
 var saveToken = async (req, user) => {
 
   let code = req.query.code;
-
-  var options = Object.assign({
-    code,
-    redirectUri
-  }, config);
-
   const token = await dbx.getAccessTokenFromCode(redirectUri, code);
 
   // requesting dropbox API for account information for current token
@@ -44,12 +38,16 @@ var saveToken = async (req, user) => {
 
 var getFilesForAccount = async (token) => {
   var dbx = new Dropbox({ accessToken: token.access_token, fetch: fetch });
-  return await dbx.filesListFolder({ path: '' })
+  return await dbx.filesListFolder({ path: '' });
 }
 
 var getDownloadUrl = async (token, fileId) => {
   var dbx = new Dropbox({ accessToken: token.access_token, fetch: fetch });
-  return await dbx.filesGetTemporaryLink({path: `id:${fileId}`});
+  const response = await dbx.filesGetTemporaryLink({path: `id:${fileId}`}).catch((e) => {
+    console.log(e);
+    throw 'Unable to get file from Dropbox';
+  });
+  return response.link;
 }
 
 module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount, getDownloadUrl }

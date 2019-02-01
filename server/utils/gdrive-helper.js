@@ -1,8 +1,5 @@
 const fs = require('fs');
 const { google } = require('googleapis');
-const os = require('os');
-const uuid = require('uuid');
-const path = require('path');
 const { gdriveCreds } = require('../config/config');
 const { User } = require('../models/user');
 const axios = require('axios');
@@ -26,6 +23,7 @@ var saveToken = async (req, user) => {
         var accounts = await user.addAccount(token, 'gdrive', email);
         return accounts;
     } catch (error) {
+        console.log(error);
         throw error;
     }
 }
@@ -100,42 +98,6 @@ var upload = (auth, fileName, readStream, res, lastChunk) => {
     });
 }
 
-// reference: https://github.com/googleapis/google-api-nodejs-client/blob/master/samples/drive/download.js
-var download = async (auth, token, fileId, name, response) => {
-
-    auth.setCredentials(token);
-    const drive = google.drive({ version: 'v3', auth });
-
-    return new Promise(async (resolve, reject) => {
-        const filePath = path.join(os.tmpdir(), uuid.v4());
-        console.log(`writing to ${filePath}`);
-        const dest = fs.createWriteStream(filePath);
-        let progress = 0;
-        const res = await drive.files.get(
-            { fileId, alt: 'media' },
-            { responseType: 'stream' }
-        );
-        res.data
-            .on('end', () => {
-                console.log('Done downloading file.');
-                resolve(filePath);
-            })
-            .on('error', err => {
-                console.error('Error downloading file.');
-                reject(err);
-            })
-            .on('data', d => {
-                progress += d.length;
-                if (process.stdout.isTTY) {
-                    process.stdout.clearLine();
-                    process.stdout.cursorTo(0);
-                    process.stdout.write(`Downloaded ${progress} bytes`);
-                }
-            })
-            .pipe(dest);
-    });
-}
-
 var getDownloadUrl = async (token, fileId) => {
     auth.setCredentials(token);
     const drive = google.drive({ version: 'v3', auth });
@@ -162,8 +124,10 @@ var verifyTokenValidity = async (token) => {
                 client_id: gdriveCreds.client_id,
                 client_secret: gdriveCreds.client_secret,
                 grant_type: 'refresh_token'
-            }
-        ).catch((e) => { throw 'Error refreshing token' });
+            }).catch((e) => {
+                console.log(e);
+                throw 'Error refreshing token';
+            });
 
         // TODO:
         // use the user instance instead of searching the whole database.
@@ -183,7 +147,10 @@ var verifyTokenValidity = async (token) => {
                     "accounts.$.token.expiry_date": new Date().getTime() + (newToken.data.expires_in) * 1000
                 }
             }
-        ).catch((e) => { throw 'Error putting new token into db' });
+        ).catch((e) => {
+            console.log(e);
+            throw 'Error putting new token into db';
+        });
 
         return newToken.data;
     }
@@ -194,4 +161,4 @@ var verifyTokenValidity = async (token) => {
     }
 }
 
-module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount, upload, download, getDownloadUrl, verifyTokenValidity }
+module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount, upload, getDownloadUrl, verifyTokenValidity }
