@@ -50,4 +50,19 @@ router
         }
     })
 
+    .get('/storageInfo/:accountId', authenticate, async (req, res) => {
+
+        const accountId = req.params.accountId;
+        if (!ObjectID.isValid(accountId))
+            return res.status(400).send('Account ID not valid!');
+        
+        try {
+            var token = await req.user.getTokensForAccounts([accountId]);
+            const storageInfo = await dropboxHelper.getStorageInfo(token);
+            res.send(storageInfo)
+        } catch (error) {
+            return res.status(400).send(error);
+        }
+    });
+
 module.exports = router;
