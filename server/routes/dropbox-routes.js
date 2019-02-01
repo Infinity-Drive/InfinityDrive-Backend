@@ -1,41 +1,68 @@
-const _ = require('lodash');
-
 var express = require('express'),
     router = express.Router();
 
 const dropboxHelper = require('../utils/dropbox-helper');
 var { authenticate } = require('../middleware/authenticate');
+const { ObjectID } = require('mongodb');
 
 router
     .get('/authorize', (req, res) => {
-        res.send(dropboxHelper.getAuthorizationUrl());
+        const url = dropboxHelper.getAuthorizationUrl();
+        res.send(url);
     })
 
-    .get('/saveToken', authenticate, (req, res) => {
-        dropboxHelper.saveToken(req, req.user).then((accounts) => {
-            res.send(accounts);
-        }).catch((e) => res.send(e));
-    })
-
-    .get('/listFiles', authenticate, async (req, res) => {
-
-        var body = _.pick(req.body, ['accountId']);
+    .get('/saveToken', authenticate, async (req, res) => {
         try {
-            const token = await req.user.getTokensForAccounts([body.accountId]);
+            const accounts = await dropboxHelper.saveToken(req, req.user);
+            res.send(accounts);
+        } catch (error) {
+            return res.status(400).send(error);
+        }
+    })
+
+    .get('/listFiles/:accountId', authenticate, async (req, res) => {
+
+        var accountId = req.params.accountId;
+        if (!ObjectID.isValid(accountId))
+            return res.status(400).send('Account ID not valid!');
+
+        try {
+            const token = await req.user.getTokensForAccounts([accountId]);
             res.send(await dropboxHelper.getFilesForAccount(token));
         } catch (error) {
-            res.send(error);
+            return res.status(400).send(error);
         }
 
     })
 
-    .get('/downloadUrl', authenticate, async (req, res) => {
+    .get('/downloadUrl/:accountId/:fileId', authenticate, async (req, res) => {
+
+        var accountId = req.params.accountId;
+        if (!ObjectID.isValid(accountId))
+            return res.status(400).send('Account ID not valid!');
+
         try {
-            const token = await req.user.getTokensForAccounts(['5c4ca174b8d8190458fb3890']);
-            dropboxHelper.getDownloadUrl(token, 'FQ07I4l2GTcAAAAAAAABHQ').then((response) => res.send(response.link));
+            const token = await req.user.getTokensForAccounts([accountId]);
+            const url = await dropboxHelper.getDownloadUrl(token, req.params.fileId);
+            res.send(url)
         } catch (error) {
-            res.send(error);
+            return res.status(400).send(error);
         }
     })
+
+    .get('/storageInfo/:accountId', authenticate, async (req, res) => {
+
+        const accountId = req.params.accountId;
+        if (!ObjectID.isValid(accountId))
+            return res.status(400).send('Account ID not valid!');
+        
+        try {
+            var token = await req.user.getTokensForAccounts([accountId]);
+            const storageInfo = await dropboxHelper.getStorageInfo(token);
+            res.send(storageInfo)
+        } catch (error) {
+            return res.status(400).send(error);
+        }
+    });
 
 module.exports = router;

@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 
 mongoose.connect('mongodb://localhost:27017/InfinityDrive', { useNewUrlParser: true });
 mongoose.set('useCreateIndex', true);
+mongoose.set('useFindAndModify', false);
 
 var UserSchema = new mongoose.Schema({
     verficationToken: { type: String },
@@ -90,7 +91,7 @@ UserSchema.methods.generateAuthToken = function () {    //can add any instance m
 };
 
 UserSchema.methods.addAccount = function (token, accountType, email) {
-
+    
     return new Promise((resolve, reject) => {
 
         var user = this;
@@ -221,16 +222,16 @@ UserSchema.methods.removeToken = function (token) {
 UserSchema.methods.removeAccount = function (accountId) {
     var user = this;
 
-    if(!(user.accounts.id(accountId)))
+    if (!(user.accounts.id(accountId)))
         return Promise.reject('Account not found!');
 
-    if(user.accounts.id(accountId).merged)
+    if (user.accounts.id(accountId).merged)
         return Promise.reject('Cannot remove a merged account!');
 
     return user.updateOne({
         $pull: {
-            accounts: { 
-                '_id': accountId   
+            accounts: {
+                '_id': accountId
             }
         }
     });
