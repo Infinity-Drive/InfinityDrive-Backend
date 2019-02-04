@@ -38,7 +38,6 @@ router
         
         try {
             var token = await req.user.getTokensForAccounts([accountId]);
-            token = await gdriveHelper.verifyTokenValidity(token);
             const files = await gdriveHelper.getFilesForAccount(token);
             res.send(files);
         } catch (error) {
@@ -54,7 +53,6 @@ router
         
         try {
             var token = await req.user.getTokensForAccounts([accountId]);
-            token = await gdriveHelper.verifyTokenValidity(token);
             const downloadUrl = await gdriveHelper.getDownloadUrl(token, req.params.fileId);
             res.send(downloadUrl);
         } catch (error) {
@@ -70,7 +68,6 @@ router
         
         try {
             var token = await req.user.getTokensForAccounts([accountId]);
-            token = await gdriveHelper.verifyTokenValidity(token);
             const storageInfo = await gdriveHelper.getStorageInfo(token);
             res.send(storageInfo)
         } catch (error) {

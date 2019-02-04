@@ -1,4 +1,3 @@
-const fs = require('fs');
 const { google } = require('googleapis');
 const { gdriveCreds } = require('../config/config');
 const { User } = require('../models/user');
@@ -49,6 +48,7 @@ var getUserInfo = async (auth) => {
 }
 
 var getStorageInfo = async (token) => {
+    token = await verifyTokenValidity(token);
     auth.setCredentials(token);
     const drive = google.drive({ version: 'v3', auth });
     const userInfoResponse = await drive.about.get({
@@ -61,7 +61,7 @@ var getStorageInfo = async (token) => {
 }
 
 var getFilesForAccount = async (token) => {
-
+    token = await verifyTokenValidity(token);
     auth.setCredentials(token);
 
     const drive = google.drive({ version: 'v3', auth }); // need to specify auth as auth: auth or auth: any_other_name
@@ -83,38 +83,43 @@ var getFilesForAccount = async (token) => {
 
 }
 
-var upload = (auth, fileName, readStream, res, lastChunk) => {
-    console.log(`uploading ${fileName}`);
+var upload = async (token, fileName, readStream) => {
+    token = await verifyTokenValidity(token);
+    auth.setCredentials(token);
+
+    console.log(`---- Uploading ${fileName} ----`);
     const drive = google.drive({ version: 'v3', auth });
     var fileMetadata = {
         'name': fileName
     };
     var media = {
-        body: fs.createReadStream(`${fileName}.bin`)
+        body: readStream
     };
-    drive.files.create({
+
+    const response = await drive.files.create({
         resource: fileMetadata,
         media: media,
         fields: 'id'
-    }, function (err, file) {
-        if (err) {
-            console.error(err);
-        } else {
-
-            if (lastChunk)
-                res.send('Upload success');
-
-            console.log('File Id: ', file.data.id);
-        }
+    }, {
+            onUploadProgress: function (progress) {
+                console.log(`Uploaded ${fileName}:`, progress.bytesRead.toString());
+            }
+    }).catch((e) => {
+        console.log(e);
+        throw 'Unable to upload file to Google Drive';
     });
+
+    return response.data.id;
+
 }
 
 var getDownloadUrl = async (token, fileId) => {
+    token = await verifyTokenValidity(token);
     auth.setCredentials(token);
     const drive = google.drive({ version: 'v3', auth });
     await drive.files.get({
         fileId
-    }).catch((e) => { 
+    }).catch((e) => {
         console.log(e);
         throw 'Unable to get file from Google';
     });
@@ -175,4 +180,4 @@ var verifyTokenValidity = async (token) => {
     }
 }
 
-module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount, upload, getStorageInfo, getDownloadUrl, verifyTokenValidity }
+module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount, upload, getStorageInfo, getDownloadUrl }

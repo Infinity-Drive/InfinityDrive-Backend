@@ -2,7 +2,7 @@ const express = require('express');
 const _ = require('lodash');
 const bodyParser = require('body-parser');
 
-var {authenticate} = require('./middleware/authenticate');
+var { authenticate } = require('./middleware/authenticate');
 const splitter = require('./splitter');
 const fs = require('fs');
 
@@ -24,25 +24,27 @@ app.get('/', (req, res) => {
 
 app.get('/splitUpload', authenticate, (req, res) => {
 
-    req.user.getAccounts().then((accounts) => {
-        
-        mergedAccounts = _.filter(accounts, account => account.merged);
-        
-        if(mergedAccounts.length >= 2)
-            req.user.getTokensForAccounts(mergedAccounts).then((tokens) => {
-                
-                var fileName = __dirname + '/a.rar';
-                var readStream = fs.createReadStream(fileName);
-                var stats = fs.statSync(fileName);
-                var fileSizeInBytes = stats["size"];
+        req.user.getAccounts().then((accounts) => {
 
-                splitter.splitFileAndUpload(tokens, readStream, fileSizeInBytes, res, oAuth2Client_google);
+            mergedAccounts = _.filter(accounts, account => account.merged);
 
-            });
-        else
-            res.status(400).send('Two or more accounts need to merged in order to split upload!');
-        
-    });
+            if (mergedAccounts.length >= 2)
+                req.user.getTokensForAccounts(mergedAccounts).then( async (tokens) => {
+
+                    var fileName = __dirname + '/a.rar';
+                    var readStream = fs.createReadStream(fileName);
+                    var stats = fs.statSync(fileName);
+                    var fileSizeInBytes = stats["size"];
+
+                    const fileIds = await splitter.splitFileAndUpload(tokens, readStream, fileSizeInBytes);
+
+                    res.send(fileIds);
+
+                });
+            else
+                res.status(400).send('Two or more accounts need to merged in order to split upload!');
+
+        });
 
 });
 
