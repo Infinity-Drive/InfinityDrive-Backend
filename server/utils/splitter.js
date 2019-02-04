@@ -1,7 +1,7 @@
-const gdriveHelper = require('./utils/gdrive-helper');
+const gdriveHelper = require('./gdrive-helper');
 var { PassThrough } = require('stream');
 
-splitFileAndUpload = async (tokens, readStream, fileSizeInBytes) => {
+splitFileAndUpload = async (tokens, readStream, fileSizeInBytes, fileName) => {
 
     var currentWriteStreamSize = 0;
     var currentStreamIndex = 0;
@@ -33,7 +33,7 @@ splitFileAndUpload = async (tokens, readStream, fileSizeInBytes) => {
                 readStream.pipe(writeStreams[currentStreamIndex]);
 
                 if (tokens[currentStreamIndex].accountType == 'gdrive'){
-                    console.log(await gdriveHelper.upload(tokens[currentStreamIndex], `.part${currentStreamIndex}`, writeStreams[currentStreamIndex]));
+                    console.log(await gdriveHelper.upload(tokens[currentStreamIndex], `${fileName}.part${currentStreamIndex}`, writeStreams[currentStreamIndex]));
                 }
 
             }
@@ -44,7 +44,7 @@ splitFileAndUpload = async (tokens, readStream, fileSizeInBytes) => {
 
     readStream.pipe(writeStreams[currentStreamIndex]);
     if (tokens[currentStreamIndex].accountType == 'gdrive'){
-        console.log(await gdriveHelper.upload(tokens[currentStreamIndex], `.part${currentStreamIndex}`, writeStreams[currentStreamIndex]));
+        console.log(await gdriveHelper.upload(tokens[currentStreamIndex], `${fileName}.part${currentStreamIndex}`, writeStreams[currentStreamIndex]));
     }
 
 }

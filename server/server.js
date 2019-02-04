@@ -3,8 +3,10 @@ const _ = require('lodash');
 const bodyParser = require('body-parser');
 
 var { authenticate } = require('./middleware/authenticate');
-const splitter = require('./splitter');
+const splitter = require('./utils/splitter');
 const fs = require('fs');
+
+var BusBoy = require("busboy");
 
 const app = express();
 
@@ -22,29 +24,35 @@ app.get('/', (req, res) => {
     res.send('Welcome to Infinity Drive');
 });
 
-app.get('/splitUpload', authenticate, (req, res) => {
+app.get("/splitUpload", (req, res) => {
+    res.send("<form action='http://localhost:3000/splitUpload' method='post' enctype='multipart/form-data'><input type='file'/><input type='submit' value='Submit' /></form>");
+});
 
-        req.user.getAccounts().then((accounts) => {
+app.post('/splitUpload', authenticate, async (req, res) => {
 
-            mergedAccounts = _.filter(accounts, account => account.merged);
+    try {
+        var busboy = new BusBoy({ headers: req.headers });
 
-            if (mergedAccounts.length >= 2)
-                req.user.getTokensForAccounts(mergedAccounts).then( async (tokens) => {
+        const accounts = await req.user.getAccounts();
+        const mergedAccounts = _.filter(accounts, account => account.merged);
 
-                    var fileName = __dirname + '/a.rar';
-                    var readStream = fs.createReadStream(fileName);
-                    var stats = fs.statSync(fileName);
-                    var fileSizeInBytes = stats["size"];
+        if (mergedAccounts.length >= 2) {
+            const tokens = await req.user.getTokensForAccounts(mergedAccounts);
 
-                    const fileIds = await splitter.splitFileAndUpload(tokens, readStream, fileSizeInBytes);
+            busboy.on("file", async (fieldname, file, filename, encoding, mimetype) => {
+                await splitter.splitFileAndUpload(tokens, file, req.headers['content-length'], filename);
+                res.send('File split and uploaded');
+            });
 
-                    res.send(fileIds);
+            req.pipe(busboy);
+        }
+        else
+            res.status(400).send('Two or more accounts need to merged in order to split upload!');
 
-                });
-            else
-                res.status(400).send('Two or more accounts need to merged in order to split upload!');
-
-        });
+    } catch (error) {
+        res.status(400).send('Unable to split upload!');
+        console.log(error);
+    }
 
 });
 
