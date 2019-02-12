@@ -9,7 +9,7 @@ var auth = new google.auth.OAuth2(gdriveCreds.client_id, gdriveCreds.client_secr
 
 var saveToken = async (req, user) => {
 
-    var code = req.query.code;
+    var code = req.body.code;
     var response;
     try {
         // we're throwing a custom error here because in response we cannot send the original error when generated via oAuth client (circular structure)

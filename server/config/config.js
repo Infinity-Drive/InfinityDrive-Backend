@@ -14,7 +14,7 @@ module.exports = {
   gdriveCreds: {
     client_id: '651431583012-j0k0oent5gsprkdimeup45c44353pb35.apps.googleusercontent.com',
     client_secret: '9aRhiRYg7Va5e5l6Dq-x5VFL',
-    redirect_uri: 'http://localhost:3000/gdrive/saveToken'
+    redirect_uri: 'http://localhost:4200/Dashboard'
   }
 
 };
