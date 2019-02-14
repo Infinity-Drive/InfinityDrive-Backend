@@ -13,8 +13,6 @@ var authenticate = (req, res, next) => {    //defining a middleware
 
     //CHANGE THIS FOR SECURitY
     var token = req.header('x-auth'); //get token set by POST /users
-
-    console.log(token)
     
     User.findByToken(token).then((user) => {
 
