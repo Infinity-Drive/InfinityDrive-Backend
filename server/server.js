@@ -16,6 +16,15 @@ gdriveRoutes = require('./routes/gdrive-routes.js');
 userRoutes = require('./routes/user-routes.js');
 dropboxRoutes = require('./routes/dropbox-routes.js');
 
+app.use((req, res, next) => {   //this runs before each route
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:4200');    
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');    
+    res.setHeader('Access-Control-Allow-Headers', 'x-auth,Content-Type');
+    res.setHeader('Access-Control-Expose-Headers', 'x-auth,Content-Type');
+    res.setHeader('Access-Control-Allow-Credentials', true);       
+    next();  
+})
+
 app.use('/gdrive', gdriveRoutes);
 app.use('/users', userRoutes);
 app.use('/dropbox', dropboxRoutes);
@@ -27,6 +36,7 @@ app.get('/', (req, res) => {
 app.get("/splitUpload", (req, res) => {
     res.send("<form action='http://localhost:3000/splitUpload' method='post' enctype='multipart/form-data'><input type='file'/><input type='submit' value='Submit' /></form>");
 });
+
 
 app.post('/splitUpload', authenticate, async (req, res) => {
 

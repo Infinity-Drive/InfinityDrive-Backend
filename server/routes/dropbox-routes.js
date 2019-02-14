@@ -8,10 +8,10 @@ const { ObjectID } = require('mongodb');
 router
     .get('/authorize', (req, res) => {
         const url = dropboxHelper.getAuthorizationUrl();
-        res.send(url);
+        res.send({url});
     })
 
-    .get('/saveToken', authenticate, async (req, res) => {
+    .post('/saveToken', authenticate, async (req, res) => {
         try {
             const accounts = await dropboxHelper.saveToken(req, req.user);
             res.send(accounts);

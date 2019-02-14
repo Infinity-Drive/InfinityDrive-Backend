@@ -9,7 +9,7 @@ const config = {
 const Dropbox = require('dropbox').Dropbox;
 var dbx = new Dropbox(config);
 
-const redirectUri = `http://localhost:3000/dropbox/saveToken`;
+const redirectUri = `http://localhost:4200/Dashboard`;
 
 var getAuthorizationUrl = () => {
   return dbx.getAuthenticationUrl(redirectUri, null, 'code')
@@ -17,7 +17,7 @@ var getAuthorizationUrl = () => {
 
 var saveToken = async (req, user) => {
   try {
-    let code = req.query.code;
+    let code = req.body.code;
     const token = await dbx.getAccessTokenFromCode(redirectUri, code);
     const userInfo = await getUserInfo(token);
     const accounts = await user.addAccount({ 'access_token': token }, 'dropbox', userInfo.email);
