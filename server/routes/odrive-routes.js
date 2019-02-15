@@ -1,4 +1,5 @@
 const { ObjectID } = require('mongodb');
+var BusBoy = require("busboy");
 
 var { authenticate } = require('../middleware/authenticate');
 const odriveHelper = require('../utils/odrive-helper');
@@ -27,7 +28,7 @@ router
         const accountId = req.params.accountId;
         if (!ObjectID.isValid(accountId))
             return res.status(400).send('Account ID not valid!');
-        
+
         try {
             var token = await req.user.getTokensForAccounts([accountId]);
             const files = await odriveHelper.getFilesForAccount(token);
@@ -42,11 +43,11 @@ router
         const accountId = req.params.accountId;
         if (!ObjectID.isValid(accountId))
             return res.status(400).send('Account ID not valid!');
-        
+
         try {
             var token = await req.user.getTokensForAccounts([accountId]);
             const downloadUrl = await odriveHelper.getDownloadUrl(token, req.params.fileId);
-            res.send({downloadUrl});
+            res.send({ downloadUrl });
         } catch (error) {
             return res.status(400).send(error);
         }
@@ -57,11 +58,61 @@ router
         const accountId = req.params.accountId;
         if (!ObjectID.isValid(accountId))
             return res.status(400).send('Account ID not valid!');
-        
+
         try {
             var token = await req.user.getTokensForAccounts([accountId]);
             const storageInfo = await odriveHelper.getStorageInfo(token);
-            res.send(storageInfo)
+            res.send(storageInfo);
+        } catch (error) {
+            return res.status(400).send(error);
+        }
+    })
+
+    .get("/upload", (req, res) => {
+        res.send("<form action='http://localhost:3000/odrive/upload' method='post' enctype='multipart/form-data'><input type='file' name='myfile'/><input type='submit' value='Submit' /></form>");
+    })
+
+    .post('/upload/:accountId', authenticate, async (req, res) => {
+
+        try {
+
+            const accountId = req.params.accountId;
+            if (!ObjectID.isValid(accountId))
+                return res.status(400).send('Account ID not valid!');
+
+            var busboy = new BusBoy({ headers: req.headers });
+
+            const accountId = '5c66943ec587d33fff9472ca';
+
+            if (!ObjectID.isValid(accountId))
+                return res.status(400).send('Account ID not valid!');
+
+            const token = await req.user.getTokensForAccounts([accountId]);
+
+            busboy.on("file", async (fieldname, file, filename, encoding, mimetype) => {
+                const uploadedFile = await odriveHelper.upload(token, filename, file);
+                res.send(uploadedFile);
+            });
+
+            req.pipe(busboy);
+
+        } catch (e) {
+            res.status(400).send(e);
+            console.log(e);
+        }
+
+    })
+
+    .delete('/delete/:accountId/:itemId', authenticate, async (req, res) => {
+
+        const accountId = req.params.accountId;
+        if (!ObjectID.isValid(accountId))
+            return res.status(400).send('Account ID not valid!');
+
+        try {
+            var token = await req.user.getTokensForAccounts([accountId]);
+            await odriveHelper.deleteItem(token, req.params.itemId);
+            res.send('Item deleted');
         } catch (error) {
             return res.status(400).send(error);
         }

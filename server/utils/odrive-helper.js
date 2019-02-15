@@ -1,4 +1,6 @@
 const { odriveCreds } = require('../config/config');
+var oneDriveAPI = require('onedrive-api');
+
 const { User } = require('../models/user');
 const axios = require('axios');
 const qs = require('querystring');
@@ -105,10 +107,39 @@ var getStorageInfo = async (token) => {
   })
     .catch((e) => {
       console.log(e);
-      throw 'Error getting onedrive info from Microsoft Servers';
+      throw 'Error getting OneDrive info from Microsoft Servers';
     });
 
   return await info.data.quota;
+}
+
+var upload = async (token, filename, readableStream) => {
+
+  token = await verifyTokenValidity(token);
+
+  const item = await oneDriveAPI.items.uploadSimple({
+    accessToken: token.access_token,
+    filename,
+    readableStream
+  }).catch((e) => {
+    console.log(e);
+    throw 'Unable to upload file to OneDrive';
+  });
+
+  return item;
+}
+
+var deleteItem = async (token, itemId) => {
+
+  token = await verifyTokenValidity(token);
+
+  const deletedItem = await oneDriveAPI.items.delete({
+    accessToken: token.access_token,
+    itemId
+  }).catch((e) => {
+    console.log(e);
+    throw 'Unable to delete item from OneDrive';
+  });
 }
 
 var verifyTokenValidity = async (token) => {
@@ -118,7 +149,7 @@ var verifyTokenValidity = async (token) => {
   // if current time is 5 mins or more than token expiry
   if (((currentTime - tokenExpiryTime) > - (5 * 60 * 1000))) {
 
-    console.log('Getting new onedrive token');
+    console.log('Getting new OneDrive token');
     // requesting new token
     const newToken = await axios({
       method: 'post',
@@ -134,7 +165,7 @@ var verifyTokenValidity = async (token) => {
     })
       .catch((e) => {
         console.log(e);
-        throw 'Error refreshing onedrive token';
+        throw 'Error refreshing OneDrive token';
       });
 
     // TODO:
@@ -170,4 +201,4 @@ var verifyTokenValidity = async (token) => {
 }
 
 
-module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount, getDownloadUrl, getStorageInfo }
+module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount, getDownloadUrl, getStorageInfo, upload, deleteItem }
