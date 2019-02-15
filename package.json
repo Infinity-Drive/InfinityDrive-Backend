@@ -23,17 +23,12 @@
     "busboy": "^0.3.0",
     "dropbox": "^4.0.15",
     "express": "^4.16.4",
-    "express-session": "^1.15.6",
     "googleapis": "^34.0.0",
-    "hbs": "^4.0.1",
     "isomorphic-fetch": "^2.2.1",
     "jsonwebtoken": "^8.4.0",
     "lodash": "^4.17.11",
     "mongoose": "^5.3.14",
-    "passport": "^0.4.0",
-    "passport-azure-ad": "^4.0.0",
-    "superagent": "^4.0.0-beta.5",
-    "uuid": "^3.3.2",
+    "querystring": "^0.2.0",
     "validator": "^10.9.0"
   }
 }

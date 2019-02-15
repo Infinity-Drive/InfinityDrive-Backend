@@ -1,107 +1,70 @@
-const express = require('express');
-const graphHelper = require('../utils/graph-helper');
-const passport = require('passport');
-const OIDCStrategy = require('passport-azure-ad').OIDCStrategy;
-const uuid = require('uuid');
-const session = require('express-session');
-const config = require('../utils/config.js');
+const { ObjectID } = require('mongodb');
 
-const app = express();
-app.set('view engine', 'hbs');
+var { authenticate } = require('../middleware/authenticate');
+const odriveHelper = require('../utils/odrive-helper');
 
-// authentication setup
-const callback = (iss, sub, profile, accessToken, refreshToken, done) => {
-    done(null, {
-        profile,
-        accessToken,
-        refreshToken
-    });
-};
+var express = require('express'),
+    router = express.Router();
 
-passport.use(new OIDCStrategy(config.creds, callback));
+router
 
-// session middleware configuration
-// see https://github.com/expressjs/session
-app.use(session({
-    secret: '12345QWERTY-SECRET',
-    name: 'graphNodeCookie',
-    resave: false,
-    saveUninitialized: false,
-    //cookie: {secure: true} // For development only
-}));
+    .get('/authorize', (req, res) => {
+        const url = odriveHelper.getAuthorizationUrl();
+        res.send(url);
+    })
 
-app.use(passport.initialize());
-app.use(passport.session());
+    .get('/saveToken', authenticate, async (req, res) => {
+        try {
+            const accounts = await odriveHelper.saveToken(req, req.user);
+            res.send(accounts);
+        } catch (error) {
+            return res.status(400).send(error);
+        }
+    })
 
-const users = {};
-passport.serializeUser((user, done) => {
-    const id = uuid.v4();
-    users[id] = user;
-    done(null, id);
-});
-passport.deserializeUser((id, done) => {
-    const user = users[id];
-    done(null, user);
-});
+    .get('/listFiles/:accountId', authenticate, async (req, res) => {
 
-// Get the home page.
-app.get('/', (req, res) => {
-    // check if user is authenticated
-    if (!req.isAuthenticated()) {
-        res.render('onedrive-login.hbs');
-    } else {
-        renderDriveTest(req, res);
-    }
-});
-
-// Authentication request.
-app.get('/login',    //this calls the token route below
-    passport.authenticate('azuread-openidconnect', { failureRedirect: '/' }),
-    (req, res) => {
-        res.redirect('/');
-    });
-
-// Authentication callback.
-// After we have an access token, get user data and load the sendMail page.
-app.get('/token', passport.authenticate('azuread-openidconnect', { failureRedirect: '/' }), (req, res) => {
+        const accountId = req.params.accountId;
+        if (!ObjectID.isValid(accountId))
+            return res.status(400).send('Account ID not valid!');
         
-    
-    
-        graphHelper.getDriveInfo(req.user.accessToken, (err, drive) => {
-            if (!err) {
-                graphHelper.getFiles(req.user.accessToken, (err, files) => {
-                    if (!err) {
-                        res.render('onedrive-files.hbs', { driveInfo: JSON.stringify(drive.body), files: JSON.stringify(files.body) })
-                    }
-                    else {
-                        renderError(err, res);
-                    }
-                });
-            } else {
-                renderError(err, res);
-            }
-        });
-    });
+        try {
+            var token = await req.user.getTokensForAccounts([accountId]);
+            const files = await odriveHelper.getFilesForAccount(token);
+            res.send(files);
+        } catch (error) {
+            return res.status(400).send(error);
+        }
+    })
 
+    .get('/downloadUrl/:accountId/:fileId', authenticate, async (req, res) => {
 
-function renderDriveTest(req, res) {
-    graphHelper.getDriveInfo(req.user.accessToken, (err, drive) => {
-        if (!err) {
-            res.render('onedrive-files.hbs', { driveInfo: JSON.stringify(drive.body) })
-            //renderDriveTest(req, res);
-        } else {
-            renderError(err, res);
+        const accountId = req.params.accountId;
+        if (!ObjectID.isValid(accountId))
+            return res.status(400).send('Account ID not valid!');
+        
+        try {
+            var token = await req.user.getTokensForAccounts([accountId]);
+            const downloadUrl = await odriveHelper.getDownloadUrl(token, req.params.fileId);
+            res.send({downloadUrl});
+        } catch (error) {
+            return res.status(400).send(error);
+        }
+    })
+
+    .get('/storageInfo/:accountId', authenticate, async (req, res) => {
+
+        const accountId = req.params.accountId;
+        if (!ObjectID.isValid(accountId))
+            return res.status(400).send('Account ID not valid!');
+        
+        try {
+            var token = await req.user.getTokensForAccounts([accountId]);
+            const storageInfo = await odriveHelper.getStorageInfo(token);
+            res.send(storageInfo)
+        } catch (error) {
+            return res.status(400).send(error);
         }
     });
-}
 
-app.get('/disconnect', (req, res) => {
-    req.session.destroy(() => {
-        req.logOut();
-        res.clearCookie('graphNodeCookie');
-        res.status(200);
-        res.redirect('/');
-    });
-});
-
-app.listen(3000, () => {console.log('Server started')})
+module.exports = router;

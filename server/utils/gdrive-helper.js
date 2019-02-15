@@ -7,23 +7,6 @@ const SCOPES = ['https://www.googleapis.com/auth/drive'];
 
 var auth = new google.auth.OAuth2(gdriveCreds.client_id, gdriveCreds.client_secret, gdriveCreds.redirect_uri);
 
-var saveToken = async (req, user) => {
-
-    var code = req.body.code;
-    var response;
-    try {
-        // we're throwing a custom error here because in response we cannot send the original error when generated via oAuth client (circular structure)
-        response = await auth.getToken(code).catch((e) => { throw 'Error getting token from Google Servers' });
-        var token = response.tokens;
-        auth.setCredentials(token);
-        const email = await getUserInfo(auth);
-        var accounts = await user.addAccount(token, 'gdrive', email);
-        return accounts;
-    } catch (e) {
-        throw e;
-    }
-}
-
 var getAuthorizationUrl = () => {
 
     const url = auth.generateAuthUrl({
@@ -34,6 +17,22 @@ var getAuthorizationUrl = () => {
     });
 
     return url;
+}
+
+var saveToken = async (req, user) => {
+
+    try {
+        var code = req.body.code;
+        // we're throwing a custom error here because in response we cannot send the original error when generated via oAuth client (circular structure)
+        const response = await auth.getToken(code).catch((e) => { throw 'Error getting token from Google Servers' });
+        var token = response.tokens;
+        auth.setCredentials(token);
+        const email = await getUserInfo(auth);
+        var accounts = await user.addAccount(token, 'gdrive', email);
+        return accounts;
+    } catch (e) {
+        throw e;
+    }
 }
 
 var getUserInfo = async (auth) => {
@@ -104,10 +103,10 @@ var upload = async (token, fileName, readStream) => {
             onUploadProgress: function (progress) {
                 console.log(`Uploaded ${fileName}:`, progress.bytesRead.toString());
             }
-    }).catch((e) => {
-        console.log(e);
-        throw 'Unable to upload file to Google Drive';
-    });
+        }).catch((e) => {
+            console.log(e);
+            throw 'Unable to upload file to Google Drive';
+        });
 
     return response.data.id;
 
@@ -134,7 +133,7 @@ var verifyTokenValidity = async (token) => {
     // if current time is 5 mins or more than token expiry
     if (((currentTime - tokenExpiryTime) > - (5 * 60 * 1000))) {
 
-        console.log('Getting new token');
+        console.log('Getting new google drive token');
         // requesting new token
         const newToken = await axios.post(
             'https://www.googleapis.com/oauth2/v4/token',

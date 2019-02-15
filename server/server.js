@@ -13,8 +13,9 @@ const app = express();
 app.use(bodyParser.json()); //body parser lets us send json to our server
 
 gdriveRoutes = require('./routes/gdrive-routes.js');
-userRoutes = require('./routes/user-routes.js');
+odriveRoutes = require('./routes/odrive-routes.js');
 dropboxRoutes = require('./routes/dropbox-routes.js');
+userRoutes = require('./routes/user-routes.js');
 
 app.use((req, res, next) => {   //this runs before each route
     res.setHeader('Access-Control-Allow-Origin', 'http://localhost:4200');    
@@ -26,8 +27,9 @@ app.use((req, res, next) => {   //this runs before each route
 })
 
 app.use('/gdrive', gdriveRoutes);
-app.use('/users', userRoutes);
+app.use('/odrive', odriveRoutes);
 app.use('/dropbox', dropboxRoutes);
+app.use('/users', userRoutes);
 
 app.get('/', (req, res) => {
     res.send('Welcome to Infinity Drive');
