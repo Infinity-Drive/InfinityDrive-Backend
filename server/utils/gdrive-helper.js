@@ -68,6 +68,7 @@ var getFilesForAccount = async (token) => {
     const drive = google.drive({ version: 'v3', auth }); // need to specify auth as auth: auth or auth: any_other_name
 
     var res = await drive.files.list({
+        q: "'me' in owners and trashed = false",
         pageSize: 10,
         fields: 'nextPageToken, files(id, name, mimeType, size)',
         key: 'AIzaSyDHtla9ZqVhQm-dqEbFsM-sArr29XizGg4'
@@ -129,6 +130,18 @@ var getDownloadUrl = async (token, fileId) => {
     return `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&access_token=${token.access_token}`;
 }
 
+var deleteItem = async (token, itemId) => {
+    token = await verifyTokenValidity(token);
+    auth.setCredentials(token);
+    const drive = google.drive({ version: 'v3', auth });
+    await drive.files.delete({
+        fileId: itemId
+    }).catch((e) => {
+        console.log(e);
+        throw 'Unable to delete file from Google Drive';
+    });
+}
+  
 var verifyTokenValidity = async (token) => {
     var currentTime = new Date();
     var tokenExpiryTime = new Date(token.expiry_date);
@@ -182,4 +195,12 @@ var verifyTokenValidity = async (token) => {
     }
 }
 
-module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount, upload, getStorageInfo, getDownloadUrl }
+module.exports = { 
+    getAuthorizationUrl, 
+    saveToken, 
+    getFilesForAccount, 
+    upload, 
+    getStorageInfo, 
+    getDownloadUrl, 
+    deleteItem 
+}
