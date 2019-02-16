@@ -82,8 +82,6 @@ router
 
             var busboy = new BusBoy({ headers: req.headers });
 
-            const accountId = '5c66943ec587d33fff9472ca';
-
             if (!ObjectID.isValid(accountId))
                 return res.status(400).send('Account ID not valid!');
 

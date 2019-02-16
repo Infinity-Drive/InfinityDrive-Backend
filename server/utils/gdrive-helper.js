@@ -1,7 +1,9 @@
 const { google } = require('googleapis');
+const axios = require('axios');
+
 const { gdriveCreds } = require('../config/config');
 const { User } = require('../models/user');
-const axios = require('axios');
+const utils = require('./utils');
 
 const SCOPES = ['https://www.googleapis.com/auth/drive'];
 
@@ -67,16 +69,17 @@ var getFilesForAccount = async (token) => {
 
     var res = await drive.files.list({
         pageSize: 10,
-        fields: 'nextPageToken, files(id, name, mimeType)',
+        fields: 'nextPageToken, files(id, name, mimeType, size)',
         key: 'AIzaSyDHtla9ZqVhQm-dqEbFsM-sArr29XizGg4'
     }).catch((e) => {
         console.log(e);
         throw 'Error getting files';
     });
 
-    const files = res.data.files;
+    var files = res.data.files;
     if (files.length)
-        return files;
+        return utils.standarizeFileData(files, 'gdrive');
+    
     else
         throw 'No files found!';
 
