@@ -1,4 +1,6 @@
-var fetch = require('isomorphic-fetch');
+const fetch = require('isomorphic-fetch');
+
+const utils = require('./utils');
 
 const config = {
   fetch: fetch,
@@ -30,7 +32,7 @@ var saveToken = async (req, user) => {
 
 var getFilesForAccount = async (token) => {
   var dbx = new Dropbox({ accessToken: token.access_token, fetch: fetch });
-  return await dbx.filesListFolder({ path: '' });
+  return utils.standarizeFileData(await dbx.filesListFolder({ path: '' },), 'dropbox');
 }
 
 var getUserInfo = async (token) => {
