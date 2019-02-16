@@ -1,31 +1,29 @@
+const Dropbox = require('dropbox').Dropbox;
 const fetch = require('isomorphic-fetch');
 
 const utils = require('./utils');
+const { dropboxCreds } = require('../config/config');
 
-const config = {
-  fetch: fetch,
-  clientId: 'zxj96cyp7qvu5fp',
-  clientSecret: 'nennum8mk99tvoi'
-};
-
-const Dropbox = require('dropbox').Dropbox;
-var dbx = new Dropbox(config);
-
-const redirectUri = `http://localhost:4200/Dashboard`;
+var dbx = new Dropbox({ 
+  fetch: fetch, 
+  clientId: dropboxCreds.clientId, 
+  clientSecret: dropboxCreds.clientSecret 
+});
 
 var getAuthorizationUrl = () => {
-  return dbx.getAuthenticationUrl(redirectUri, null, 'code')
+  return dbx.getAuthenticationUrl(dropboxCreds.redirectUri, null, 'code')
 }
 
 var saveToken = async (req, user) => {
   try {
     let code = req.body.code;
-    const token = await dbx.getAccessTokenFromCode(redirectUri, code);
+    const token = await dbx.getAccessTokenFromCode(dropboxCreds.redirectUri, code);
     const userInfo = await getUserInfo(token);
     const accounts = await user.addAccount({ 'access_token': token }, 'dropbox', userInfo.email);
     return accounts;
-  } catch (error) {
-    throw error;
+  } catch (e) {
+    console.log(e);
+    throw e;
   }
 
 }
@@ -55,11 +53,26 @@ var getStorageInfo = async (token) => {
 
 var getDownloadUrl = async (token, fileId) => {
   var dbx = new Dropbox({ accessToken: token.access_token, fetch: fetch });
-  const response = await dbx.filesGetTemporaryLink({ path: `id:${fileId}` }).catch((e) => {
+  const response = await dbx.filesGetTemporaryLink({ path: fileId }).catch((e) => {
     console.log(e);
     throw 'Unable to get file from Dropbox';
   });
   return response.link;
 }
 
-module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount, getDownloadUrl, getStorageInfo }
+var deleteItem = async (token, itemId) => {
+  var dbx = new Dropbox({ accessToken: token.access_token, fetch: fetch });
+  await dbx.filesDelete({ path: itemId }).catch((e) => {
+    console.log(e);
+    throw 'Unable to delete file from Dropbox';
+  });
+}
+
+module.exports = { 
+  getAuthorizationUrl, 
+  saveToken, 
+  getFilesForAccount, 
+  getDownloadUrl, 
+  getStorageInfo, 
+  deleteItem 
+}

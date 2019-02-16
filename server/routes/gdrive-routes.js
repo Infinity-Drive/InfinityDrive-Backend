@@ -66,6 +66,21 @@ router
         } catch (error) {
             return res.status(400).send(error);
         }
+    })
+
+    .delete('/delete/:accountId/:itemId', authenticate, async (req, res) => {
+
+        const accountId = req.params.accountId;
+        if (!ObjectID.isValid(accountId))
+            return res.status(400).send('Account ID not valid!');
+
+        try {
+            var token = await req.user.getTokensForAccounts([accountId]);
+            await gdriveHelper.deleteItem(token, req.params.itemId);
+            res.send('Item deleted');
+        } catch (error) {
+            return res.status(400).send(error);
+        }
     });
 
 module.exports = router;

@@ -28,11 +28,10 @@ var saveToken = async (req, user) => {
         code
       }),
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-    })
-      .catch((e) => {
-        console.log(e);
-        throw 'Error getting token from Microsoft Servers';
-      });
+    }).catch((e) => {
+      console.log(e);
+      throw 'Error getting token from Microsoft Servers';
+    });
 
     var token = await response.data;
     // Graph API doesn't send the token expiry date so we add expires_in with current time to get the expiry date
@@ -53,11 +52,10 @@ var getUserInfo = async (accessToken) => {
     method: 'get',
     url: 'https://graph.microsoft.com/v1.0/me',
     headers: { 'Authorization': 'Bearer ' + accessToken }
-  })
-    .catch((e) => {
-      console.log(e);
-      throw 'Error getting account info from Microsoft Servers';
-    });
+  }).catch((e) => {
+    console.log(e);
+    throw 'Error getting account info from Microsoft Servers';
+  });
 
   return await info.data.userPrincipalName;
 }
@@ -68,12 +66,11 @@ var getFilesForAccount = async (token) => {
     method: 'get',
     url: 'https://graph.microsoft.com/v1.0/me/drive/root/children?select=id,name,size,file,@microsoft.graph.downloadUrl',
     headers: { 'Authorization': 'Bearer ' + token.access_token }
-  })
-    .catch((e) => {
-      console.log(e);
-      throw 'Error getting files from Microsoft Servers';
-    });
-  
+  }).catch((e) => {
+    console.log(e);
+    throw 'Error getting files from Microsoft Servers';
+  });
+
   return utils.standarizeFileData(await files.data.value, 'odrive');
 }
 
@@ -84,19 +81,18 @@ var getDownloadUrl = async (token, fileId) => {
     method: 'get',
     url: `https://graph.microsoft.com/v1.0//me/drive/items/${fileId}?select=id,@microsoft.graph.downloadUrl`,
     headers: { 'Authorization': 'Bearer ' + token.access_token }
-  })
-    .catch((e) => {
-      console.log(e);
-      throw 'Error getting file from Microsoft Servers';
-    });
+  }).catch((e) => {
+    console.log(e);
+    throw 'Error getting file from Microsoft Servers';
+  });
 
   const url = await file.data['@microsoft.graph.downloadUrl'];
 
-  if(url)
+  if (url)
     return url;
   else
     throw 'URL not found for item';
-  
+
 }
 
 var getStorageInfo = async (token) => {
@@ -106,17 +102,15 @@ var getStorageInfo = async (token) => {
     method: 'get',
     url: 'https://graph.microsoft.com/v1.0/drive',
     headers: { 'Authorization': 'Bearer ' + token.access_token }
-  })
-    .catch((e) => {
-      console.log(e);
-      throw 'Error getting OneDrive info from Microsoft Servers';
-    });
+  }).catch((e) => {
+    console.log(e);
+    throw 'Error getting OneDrive info from Microsoft Servers';
+  });
 
   return await info.data.quota;
 }
 
 var upload = async (token, filename, readableStream) => {
-
   token = await verifyTokenValidity(token);
 
   const item = await oneDriveAPI.items.uploadSimple({
@@ -132,10 +126,9 @@ var upload = async (token, filename, readableStream) => {
 }
 
 var deleteItem = async (token, itemId) => {
-
   token = await verifyTokenValidity(token);
 
-  const deletedItem = await oneDriveAPI.items.delete({
+  await oneDriveAPI.items.delete({
     accessToken: token.access_token,
     itemId
   }).catch((e) => {
@@ -164,11 +157,10 @@ var verifyTokenValidity = async (token) => {
         refresh_token: token.refresh_token
       }),
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-    })
-      .catch((e) => {
-        console.log(e);
-        throw 'Error refreshing OneDrive token';
-      });
+    }).catch((e) => {
+      console.log(e);
+      throw 'Error refreshing OneDrive token';
+    });
 
     // TODO:
     // use the user instance instead of searching the whole database.
@@ -202,5 +194,12 @@ var verifyTokenValidity = async (token) => {
   }
 }
 
-
-module.exports = { getAuthorizationUrl, saveToken, getFilesForAccount, getDownloadUrl, getStorageInfo, upload, deleteItem }
+module.exports = { 
+  getAuthorizationUrl, 
+  saveToken, 
+  getFilesForAccount, 
+  getDownloadUrl, 
+  getStorageInfo, 
+  upload, 
+  deleteItem 
+}
