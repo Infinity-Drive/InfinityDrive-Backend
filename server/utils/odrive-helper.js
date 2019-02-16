@@ -15,7 +15,7 @@ var saveToken = async (req, user) => {
 
   try {
 
-    const code = req.query.code;
+    const code = req.body.code;
 
     const response = await axios({
       method: 'post',

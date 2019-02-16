@@ -11,7 +11,7 @@ router
 
     .get('/authorize', (req, res) => {
         const url = odriveHelper.getAuthorizationUrl();
-        res.send(url);
+        res.send({url});
     })
 
     .get('/saveToken', authenticate, async (req, res) => {
