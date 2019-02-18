@@ -1,4 +1,5 @@
 const { ObjectID } = require('mongodb');
+var BusBoy = require("busboy");
 
 var { authenticate } = require('../middleware/authenticate');
 
@@ -68,6 +69,36 @@ router
         } catch (error) {
             return res.status(400).send(error);
         }
+    })
+
+
+    .post('/upload/:accountId', authenticate, async (req, res) => {
+
+        try {
+
+            const accountId = req.params.accountId;
+            if (!ObjectID.isValid(accountId))
+                return res.status(400).send('Account ID not valid!');
+
+            var busboy = new BusBoy({ headers: req.headers });
+
+            if (!ObjectID.isValid(accountId))
+                return res.status(400).send('Account ID not valid!');
+
+            const token = await req.user.getTokensForAccounts([accountId]);
+
+            busboy.on("file", async (fieldname, file, filename, encoding, mimetype) => {
+                const uploadedFile = await gdriveHelper.upload(token, filename, file);
+                res.send('File Uploaded');
+            });
+
+            req.pipe(busboy);
+
+        } catch (e) {
+            res.status(400).send(e);
+            console.log(e);
+        }
+
     })
 
     .delete('/delete/:accountId/:itemId', authenticate, async (req, res) => {

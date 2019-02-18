@@ -15,7 +15,7 @@ router
         res.send({url});
     })
 
-    .get('/saveToken', authenticate, async (req, res) => {
+    .post('/saveToken', authenticate, async (req, res) => {
         try {
             const accounts = await odriveHelper.saveToken(req, req.user);
             res.send(accounts);
@@ -90,7 +90,7 @@ router
 
             busboy.on("file", async (fieldname, file, filename, encoding, mimetype) => {
                 const uploadedFile = await odriveHelper.upload(token, filename, file);
-                res.send(uploadedFile);
+                res.send('File Uploaded');
             });
 
             req.pipe(busboy);

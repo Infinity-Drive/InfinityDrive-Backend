@@ -12,7 +12,7 @@ var authenticate = (req, res, next) => {    //defining a middleware
     //var token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1YzY2NWNkMmIzNDE3NzRmYWQ4YjYyNTgiLCJhY2Nlc3MiOiJhdXRoIiwiaWF0IjoxNTUwMjEyMzA2fQ.yg3whZYQw8HZU4QNtfRqceVRg2Rs7vaj7wYKzSV55-s';
     //CHANGE THIS FOR SECURitY
     var token = req.header('x-auth'); //get token set by POST /users
-    
+    console.log(token)
     User.findByToken(token).then((user) => {
 
         if(!user)   //valid token but user not found
@@ -23,7 +23,7 @@ var authenticate = (req, res, next) => {    //defining a middleware
         next(); //need to call next otherwise code in GET /users/me wont ever execute
 
     }).catch((e) => {
-        res.status(401).send();
+        res.status(401).send('');
     });
 }
 
