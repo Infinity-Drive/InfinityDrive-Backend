@@ -1,8 +1,9 @@
 const _ = require('lodash');
 const { ObjectID } = require('mongodb');
 
-var {User} = require('../models/user');
-var {authenticate} = require('../middleware/authenticate');
+var { User } = require('../models/user');
+var { authenticate } = require('../middleware/authenticate');
+var { setAccountStorage } = require('../utils/utils');
 
 var express = require('express'),
     router = express.Router();
@@ -28,7 +29,7 @@ router
 
     .post('/login', (req, res) => {
 
-        var body = _.pick(req.body, ['email', 'password']);
+        var body = _.pick(req.body, ['email', 'password', 'name']);
 
         User.findByCredentials(body.email, body.password).then((user) => {
             return user.generateAuthToken().then((token) => {
@@ -40,8 +41,13 @@ router
 
     })
 
-    .get('/getAccounts', authenticate, (req, res) => {
-        req.user.getAccounts().then((accounts) => res.send(accounts), (err) => res.send(err));
+    .get('/getAccounts', authenticate, async (req, res) => {
+        const accounts = req.user.accounts.toObject();
+        if(accounts)
+            res.send(await setAccountStorage(accounts));
+        else
+            res.status(400).send('No accounts found');
+        // req.user.getAccounts().then((accounts) => res.send(accounts), (err) => res.send(err));
     })
 
     .patch('/manage/accounts/merge', authenticate, (req, res) => {
