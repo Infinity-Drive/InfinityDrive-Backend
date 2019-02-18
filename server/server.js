@@ -4,7 +4,6 @@ const bodyParser = require('body-parser');
 
 var { authenticate } = require('./middleware/authenticate');
 const splitter = require('./utils/splitter');
-const fs = require('fs');
 
 var BusBoy = require("busboy");
 

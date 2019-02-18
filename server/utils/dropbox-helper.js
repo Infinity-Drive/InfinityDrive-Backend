@@ -1,7 +1,6 @@
 const Dropbox = require('dropbox').Dropbox;
 const fetch = require('isomorphic-fetch');
 
-const utils = require('./utils');
 const { dropboxCreds } = require('../config/config');
 
 var dbx = new Dropbox({ 
@@ -30,7 +29,7 @@ var saveToken = async (req, user) => {
 
 var getFilesForAccount = async (token) => {
   var dbx = new Dropbox({ accessToken: token.access_token, fetch: fetch });
-  return utils.standarizeFileData(await dbx.filesListFolder({ path: '' },), 'dropbox');
+  return await dbx.filesListFolder({ path: '' },);
 }
 
 var getUserInfo = async (token) => {
@@ -48,7 +47,7 @@ var getStorageInfo = async (token) => {
     console.log(e);
     throw 'Error getting storage info from Dropbox';
   });
-  return info;
+  return {total: info.allocation.allocated.toString(), used: info.used.toString()};
 }
 
 var getDownloadUrl = async (token, fileId) => {

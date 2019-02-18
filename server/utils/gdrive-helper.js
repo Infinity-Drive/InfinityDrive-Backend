@@ -3,9 +3,6 @@ const axios = require('axios');
 
 const { gdriveCreds } = require('../config/config');
 const { User } = require('../models/user');
-const utils = require('./utils');
-
-const SCOPES = ['https://www.googleapis.com/auth/drive'];
 
 var auth = new google.auth.OAuth2(gdriveCreds.client_id, gdriveCreds.client_secret, gdriveCreds.redirect_uri);
 
@@ -14,7 +11,7 @@ var getAuthorizationUrl = () => {
     const url = auth.generateAuthUrl({
         access_type: 'offline',
         prompt: 'consent',
-        scope: SCOPES,
+        scope: gdriveCreds.scope,
         // access_type: 'online',
     });
 
@@ -58,7 +55,7 @@ var getStorageInfo = async (token) => {
         console.log(e);
         throw 'Error getting storage info from Google Servers';
     });
-    return userInfoResponse.data;
+    return {total: userInfoResponse.data.storageQuota.limit, used: userInfoResponse.data.storageQuota.usage};
 }
 
 var getFilesForAccount = async (token) => {
@@ -79,7 +76,7 @@ var getFilesForAccount = async (token) => {
 
     var files = res.data.files;
     if (files.length)
-        return utils.standarizeFileData(files, 'gdrive');
+        return files;
     
     else
         throw 'No files found!';

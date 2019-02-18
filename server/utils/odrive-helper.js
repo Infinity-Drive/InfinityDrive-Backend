@@ -4,7 +4,7 @@ const oneDriveAPI = require('onedrive-api');
 
 const { odriveCreds } = require('../config/config');
 const { User } = require('../models/user');
-const utils = require('./utils');
+const { standarizeFileData } = require('./utils');
 
 var getAuthorizationUrl = () => {
   const url = `https://login.live.com/oauth20_authorize.srf?client_id=${odriveCreds.clientID}&scope=${odriveCreds.scope}&response_type=${odriveCreds.responseType}&redirect_uri=${odriveCreds.redirectUrl}`
@@ -71,7 +71,7 @@ var getFilesForAccount = async (token) => {
     throw 'Error getting files from Microsoft Servers';
   });
 
-  return utils.standarizeFileData(await files.data.value, 'odrive');
+  return await files.data.value;
 }
 
 var getDownloadUrl = async (token, fileId) => {
@@ -107,7 +107,7 @@ var getStorageInfo = async (token) => {
     throw 'Error getting OneDrive info from Microsoft Servers';
   });
 
-  return await info.data.quota;
+  return await {total: info.data.quota.total.toString(), used: info.data.quota.used.toString()};
 }
 
 var upload = async (token, filename, readableStream) => {
