@@ -57,7 +57,7 @@ router
         if(!ObjectID.isValid(accountId))
             return res.status(404).send('Account ID not valid!');
         
-        req.user.removeAccount(accountId).then((result) => res.send('Removed account!')).catch((e) => res.send(e));
+        req.user.removeAccount(accountId).then((result) => res.send(result)).catch((e) => res.send(e));
        
     });
 

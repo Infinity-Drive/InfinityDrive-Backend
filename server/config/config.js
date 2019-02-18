@@ -1,6 +1,6 @@
 module.exports = {
   odriveCreds: {
-    redirectUrl: 'http://localhost:3000/odrive/saveToken',
+    redirectUrl: 'http://localhost:4200/Dashboard',
     clientID: '399390b3-77f1-4245-ad94-9dfb90272f24',
     clientSecret: 'ghhTASU77-%jxzrQLN005~_',
     responseType: 'code',
