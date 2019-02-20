@@ -47,7 +47,7 @@ var getUserInfo = async (auth) => {
 }
 
 var getStorageInfo = async (token) => {
-    token = await verifyTokenValidity(token);
+    // token = await verifyTokenValidity(token);
     auth.setCredentials(token);
     const drive = google.drive({ version: 'v3', auth });
     const userInfoResponse = await drive.about.get({
@@ -56,11 +56,11 @@ var getStorageInfo = async (token) => {
         console.log(e);
         throw 'Error getting storage info from Google Servers';
     });
-    return {total: userInfoResponse.data.storageQuota.limit, used: userInfoResponse.data.storageQuota.usage};
+    return { total: userInfoResponse.data.storageQuota.limit, used: userInfoResponse.data.storageQuota.usage };
 }
 
 var getFilesForAccount = async (token) => {
-    token = await verifyTokenValidity(token);
+    // token = await verifyTokenValidity(token);
     auth.setCredentials(token);
 
     const drive = google.drive({ version: 'v3', auth }); // need to specify auth as auth: auth or auth: any_other_name
@@ -78,14 +78,14 @@ var getFilesForAccount = async (token) => {
     var files = res.data.files;
     if (files.length)
         return files;
-    
+
     else
         throw 'No files found!';
 
 }
 
 var upload = async (token, fileName, readStream) => {
-    token = await verifyTokenValidity(token);
+    // token = await verifyTokenValidity(token);
     auth.setCredentials(token);
 
     console.log(`---- Uploading ${fileName} ----`);
@@ -129,7 +129,7 @@ var getDownloadUrl = async (token, fileId) => {
 }
 
 var deleteItem = async (token, itemId) => {
-    token = await verifyTokenValidity(token);
+    // token = await verifyTokenValidity(token);
     auth.setCredentials(token);
     const drive = google.drive({ version: 'v3', auth });
     await drive.files.delete({
@@ -139,14 +139,17 @@ var deleteItem = async (token, itemId) => {
         throw 'Unable to delete file from Google Drive';
     });
 }
-  
+
 var verifyTokenValidity = async (token) => {
     var currentTime = new Date();
     var tokenExpiryTime = new Date(token.expiry_date);
 
-    // if current time is 5 mins or more than token expiry
-    if (((currentTime - tokenExpiryTime) > - (5 * 60 * 1000))) {
+    // if current time is NOT 5 mins or more than token expiry
+    if (!((currentTime - tokenExpiryTime) > - (5 * 60 * 1000)))
+        return token;
 
+    //token is expired/close to expiring
+    else {
         console.log('Getting new google drive token');
         // requesting new token
         const newToken = await axios.post(
@@ -175,7 +178,6 @@ var verifyTokenValidity = async (token) => {
             {
                 '$set': {
                     "accounts.$.token.access_token": newToken.data.access_token,
-                    "accounts.$.token.id_token": newToken.data.id_token,
                     "accounts.$.token.expiry_date": new Date().getTime() + (newToken.data.expires_in) * 1000
                 }
             }
@@ -186,19 +188,14 @@ var verifyTokenValidity = async (token) => {
 
         return newToken.data;
     }
-
-    //token is good
-    else {
-        return token;
-    }
 }
 
-module.exports = { 
-    getAuthorizationUrl, 
-    saveToken, 
-    getFilesForAccount, 
-    upload, 
-    getStorageInfo, 
-    getDownloadUrl, 
-    deleteItem 
+module.exports = {
+    getAuthorizationUrl,
+    saveToken,
+    getFilesForAccount,
+    upload,
+    getStorageInfo,
+    getDownloadUrl,
+    deleteItem
 }

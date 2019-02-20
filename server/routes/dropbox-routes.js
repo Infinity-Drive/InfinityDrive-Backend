@@ -4,7 +4,6 @@ var express = require('express'),
 const dropboxHelper = require('../utils/dropbox-helper');
 var { authenticate } = require('../middleware/authenticate');
 const { ObjectID } = require('mongodb');
-const { standarizeFileData } = require('../utils/utils');
 
 router
     .get('/authorize', (req, res) => {
@@ -30,7 +29,7 @@ router
         try {
             const token = await req.user.getTokensForAccounts([accountId]);
             var files = await dropboxHelper.getFilesForAccount(token);
-            res.send(standarizeFileData(files, 'dropbox'));
+            res.send(files);
         } catch (error) {
             return res.status(400).send(error);
         }

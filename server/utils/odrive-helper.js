@@ -4,7 +4,6 @@ const oneDriveAPI = require('onedrive-api');
 
 const { odriveCreds } = require('../config/config');
 const { User } = require('../models/user');
-const { standarizeFileData } = require('./utils');
 
 var getAuthorizationUrl = () => {
   const url = `https://login.live.com/oauth20_authorize.srf?client_id=${odriveCreds.clientID}&scope=${odriveCreds.scope}&response_type=${odriveCreds.responseType}&redirect_uri=${odriveCreds.redirectUrl}`
@@ -141,9 +140,12 @@ var verifyTokenValidity = async (token) => {
   var currentTime = new Date();
   var tokenExpiryTime = new Date(token.expiry_date);
 
-  // if current time is 5 mins or more than token expiry
-  if (((currentTime - tokenExpiryTime) > - (5 * 60 * 1000))) {
+  // if current time is NOT 5 mins or more than token expiry
+  if (!((currentTime - tokenExpiryTime) > - (5 * 60 * 1000)))
+    return token; //token is good
 
+  //token is expired/close to expiring
+  else {
     console.log('Getting new OneDrive token');
     // requesting new token
     const newToken = await axios({
@@ -186,11 +188,6 @@ var verifyTokenValidity = async (token) => {
     });
 
     return newToken.data;
-  }
-
-  //token is good
-  else {
-    return token;
   }
 }
 

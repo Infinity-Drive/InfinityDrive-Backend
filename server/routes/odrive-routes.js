@@ -3,7 +3,6 @@ var BusBoy = require("busboy");
 
 var { authenticate } = require('../middleware/authenticate');
 const odriveHelper = require('../utils/odrive-helper');
-const { standarizeFileData } = require('../utils/utils');
 
 var express = require('express'),
     router = express.Router();
@@ -33,7 +32,7 @@ router
         try {
             var token = await req.user.getTokensForAccounts([accountId]);
             const files = await odriveHelper.getFilesForAccount(token);
-            res.send(standarizeFileData(files, 'odrive'));
+            res.send(files);
         } catch (error) {
             return res.status(400).send(error);
         }

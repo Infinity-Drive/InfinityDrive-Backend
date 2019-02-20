@@ -43,8 +43,16 @@ router
 
     .get('/getAccounts', authenticate, async (req, res) => {
         const accounts = req.user.accounts.toObject();
-        if(accounts)
-            res.send(await setAccountStorage(accounts));
+        if(accounts){
+            console.time();
+            var values = await setAccountStorage(accounts);
+            accounts.forEach( (account, i) => {
+                account['storage'] = values[i];
+            });
+            console.timeEnd();
+            res.send(accounts);
+        }
+           
         else
             res.status(400).send('No accounts found');
         // req.user.getAccounts().then((accounts) => res.send(accounts), (err) => res.send(err));

@@ -7,8 +7,6 @@ var express = require('express'),
     router = express.Router();
 
 const gdriveHelper = require('../utils/gdrive-helper');
-const { standarizeFileData } = require('../utils/utils');
-
 
 router
 
@@ -35,7 +33,7 @@ router
         try {
             var token = await req.user.getTokensForAccounts([accountId]);
             const files = await gdriveHelper.getFilesForAccount(token);
-            res.send(standarizeFileData(files, 'gdrive'));
+            res.send(files);
         } catch (error) {
             return res.status(400).send(error);
         }
