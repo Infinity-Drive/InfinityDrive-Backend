@@ -36,7 +36,7 @@ router
                 res.header('x-auth', token).send(user);
             });
         }).catch((err) => {
-            res.status(400).send();
+            res.status(401).send(err);
         });
 
     })

@@ -45,8 +45,8 @@ router
 
         try {
             const token = await req.user.getTokensForAccounts([accountId]);
-            const url = await dropboxHelper.getDownloadUrl(token, req.params.fileId);
-            res.send(url)
+            const downloadUrl = await dropboxHelper.getDownloadUrl(token, req.params.fileId);
+            res.send({downloadUrl})
         } catch (error) {
             return res.status(400).send(error);
         }
