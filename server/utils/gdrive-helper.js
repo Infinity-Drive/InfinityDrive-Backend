@@ -68,7 +68,7 @@ var getFilesForAccount = async (token, folderId = 'root') => {
     var res = await drive.files.list({
         q:`'me' in owners and '${folderId}' in parents and trashed = false`,
         pageSize: 10,
-        fields: 'nextPageToken, files(id, name, mimeType, size)',
+        fields: 'nextPageToken, files(id, name, mimeType, size, modifiedTime)',
         key: 'AIzaSyDHtla9ZqVhQm-dqEbFsM-sArr29XizGg4'
     }).catch((e) => {
         console.log(e);

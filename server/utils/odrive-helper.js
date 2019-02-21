@@ -63,7 +63,7 @@ var getFilesForAccount = async (token, folderId = 'root') => {
   token = await verifyTokenValidity(token);
   const files = await axios({
     method: 'get',
-    url: `https://graph.microsoft.com/v1.0/me/drive/items/${folderId}/children?select=id,name,size,file,@microsoft.graph.downloadUrl`,
+    url: `https://graph.microsoft.com/v1.0/me/drive/items/${folderId}/children?select=id,name,size,file,lastModifiedDateTime,@microsoft.graph.downloadUrl`,
     headers: { 'Authorization': 'Bearer ' + token.access_token }
   }).catch((e) => {
     console.log(e);
