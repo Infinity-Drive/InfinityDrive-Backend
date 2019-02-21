@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 
 var { authenticate } = require('./middleware/authenticate');
 const splitter = require('./utils/splitter');
+const { getMergedAccountFiles } = require('./utils/utils');
 
 var BusBoy = require("busboy");
 
@@ -65,6 +66,22 @@ app.post('/splitUpload', authenticate, async (req, res) => {
         console.log(error);
     }
 
+});
+
+app.get('/mergedAccount/listFiles', authenticate, async (req, res) => {
+
+    try {
+        var mergedAccounts = await req.user.getMergedAccounts();
+        var files = await getMergedAccountFiles(mergedAccounts);
+        
+        await mergedAccounts.forEach( (account, i) => {
+            account['files'] = files[i];
+        });
+        res.send(mergedAccounts);
+    } catch (error) {
+        console.log(error);
+        return res.status(400).send(error);
+    }
 });
 
 app.listen('3000', () => {

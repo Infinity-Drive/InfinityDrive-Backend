@@ -1,25 +1,25 @@
-const odriveInfo = require('./odrive-helper.js').getStorageInfo;
-const dropboxInfo = require('./dropbox-helper.js').getStorageInfo;
-const gdriveInfo = require('./gdrive-helper').getStorageInfo;
+const odriveHelper = require('./odrive-helper.js');
+const dropboxHelper = require('./dropbox-helper.js');
+const gdriveHelper = require('./gdrive-helper');
 
-var setAccountStorage = (accounts) => {
+var getAccountsStorage = (accounts) => {
 
-    storageInfo = [];
+    var storageInfo = [];
 
-    accounts.forEach( (account, i) => {
+    accounts.forEach((account, i) => {
 
         if (account.accountType === 'gdrive') {
-            storageInfo[i] = gdriveInfo(account.token);
-            account['account'] = 'Google Drive';  
+            storageInfo[i] = gdriveHelper.getStorageInfo(account.token);
+            account['account'] = 'Google Drive';
         }
 
         if (account.accountType === 'odrive') {
-            storageInfo[i] = odriveInfo(account.token);
+            storageInfo[i] = odriveHelper.getStorageInfo(account.token);
             account['account'] = 'OneDrive';
         }
 
         if (account.accountType === 'dropbox') {
-            storageInfo[i] = dropboxInfo(account.token);
+            storageInfo[i] = dropboxHelper.getStorageInfo(account.token);
             account['account'] = 'Dropbox';
         }
 
@@ -31,4 +31,29 @@ var setAccountStorage = (accounts) => {
 
 }
 
-module.exports = { setAccountStorage }
+var getMergedAccountFiles = (accounts) => {
+    
+    var files = [];
+
+    accounts.forEach((account, i) => {
+
+        if (account.accountType === 'gdrive') {
+            files[i] = gdriveHelper.getFilesForAccount(account.token);
+        }
+
+        if (account.accountType === 'odrive') {
+            files[i] = odriveHelper.getFilesForAccount(account.token);
+        }
+
+        if (account.accountType === 'dropbox') {
+            files[i] = dropboxHelper.getFilesForAccount(account.token);
+        }
+
+        delete account['token'];
+        
+    });
+
+    return Promise.all(files);
+
+}
+module.exports = { getAccountsStorage, getMergedAccountFiles }

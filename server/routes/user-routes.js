@@ -3,7 +3,7 @@ const { ObjectID } = require('mongodb');
 
 var { User } = require('../models/user');
 var { authenticate } = require('../middleware/authenticate');
-var { setAccountStorage } = require('../utils/utils');
+var { getAccountsStorage } = require('../utils/utils');
 
 var express = require('express'),
     router = express.Router();
@@ -44,7 +44,7 @@ router
     .get('/getAccounts', authenticate, async (req, res) => {
         const accounts = req.user.accounts.toObject();
         if(accounts){
-            var values = await setAccountStorage(accounts);
+            var values = await getAccountsStorage(accounts);
             accounts.forEach( (account, i) => {
                 account['storage'] = values[i];
             });

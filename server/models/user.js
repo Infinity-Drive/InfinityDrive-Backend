@@ -147,14 +147,10 @@ UserSchema.methods.getMergedAccounts = function () {
 
         if (user.accounts.length != 0) {
 
-            var mergedAccounts = _.filter(user.accounts, account => account.merged);
+            var mergedAccounts = _.filter(user.accounts.toObject(), account => account.merged);
 
-            if (mergedAccounts.length != 0){
-                accounts = _.map(mergedAccounts, account => {
-                    return _.omit(account.toObject(), ['token']);
-                });
-                return resolve(accounts);
-            }
+            if (mergedAccounts.length != 0)
+                return resolve(mergedAccounts);
 
             reject('No merged accounts');
             
