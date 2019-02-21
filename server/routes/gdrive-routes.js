@@ -24,15 +24,16 @@ router
         }
     })
 
-    .get('/listFiles/:accountId', authenticate, async (req, res) => {
+    .get('/listFiles/:accountId/:folderId*?', authenticate, async (req, res) => {
 
         const accountId = req.params.accountId;
         if (!ObjectID.isValid(accountId))
             return res.status(400).send('Account ID not valid!');
         
+        const folderId = req.params.folderId;
         try {
             var token = await req.user.getTokensForAccounts([accountId]);
-            const files = await gdriveHelper.getFilesForAccount(token);
+            const files = await gdriveHelper.getFilesForAccount(token, folderId);
             res.send(files);
         } catch (error) {
             return res.status(400).send(error);

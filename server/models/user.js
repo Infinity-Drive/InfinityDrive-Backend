@@ -73,7 +73,7 @@ UserSchema.methods.toJSON = function () {    //overriding built in method (we wa
     var user = this;
     var userObject = user.toObject(); //mongoose object to java script obj
 
-    return _.pick(userObject, ['_id', 'email']);    //dont send security related data back to user
+    return _.pick(userObject, ['_id', 'email', 'name']);    //dont send security related data back to user
 };
 
 UserSchema.methods.generateAuthToken = function () {    //can add any instance method we like. We have added this method to save the token in the database and return it to server.js 
@@ -131,6 +131,33 @@ UserSchema.methods.getAccounts = function () {
             });
 
             return resolve(accounts);
+        }
+
+        reject('No account found!');
+    });
+
+};
+
+UserSchema.methods.getMergedAccounts = function () {
+    var user = this;
+
+    return new Promise((resolve, reject) => {
+
+        // omit the account token for security
+
+        if (user.accounts.length != 0) {
+
+            var mergedAccounts = _.filter(user.accounts, account => account.merged);
+
+            if (mergedAccounts.length != 0){
+                accounts = _.map(mergedAccounts, account => {
+                    return _.omit(account.toObject(), ['token']);
+                });
+                return resolve(accounts);
+            }
+
+            reject('No merged accounts');
+            
         }
 
         reject('No account found!');

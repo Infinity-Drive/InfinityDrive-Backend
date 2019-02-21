@@ -11,19 +11,16 @@ var setAccountStorage = (accounts) => {
         if (account.accountType === 'gdrive') {
             storageInfo[i] = gdriveInfo(account.token);
             account['account'] = 'Google Drive';  
-            console.log(i);
         }
 
         if (account.accountType === 'odrive') {
             storageInfo[i] = odriveInfo(account.token);
             account['account'] = 'OneDrive';
-            console.log(i);
         }
 
         if (account.accountType === 'dropbox') {
             storageInfo[i] = dropboxInfo(account.token);
             account['account'] = 'Dropbox';
-            console.log(i);
         }
 
         delete account['token'];

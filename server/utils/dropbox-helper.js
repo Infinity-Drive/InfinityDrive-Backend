@@ -27,9 +27,9 @@ var saveToken = async (req, user) => {
 
 }
 
-var getFilesForAccount = async (token) => {
+var getFilesForAccount = async (token, folderId = '') => {
   var dbx = new Dropbox({ accessToken: token.access_token, fetch: fetch });
-  return await dbx.filesListFolder({ path: '' },);
+  return await dbx.filesListFolder({ path: folderId },);
 }
 
 var getUserInfo = async (token) => {

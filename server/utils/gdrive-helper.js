@@ -59,14 +59,14 @@ var getStorageInfo = async (token) => {
     return { total: userInfoResponse.data.storageQuota.limit, used: userInfoResponse.data.storageQuota.usage };
 }
 
-var getFilesForAccount = async (token) => {
+var getFilesForAccount = async (token, folderId = 'root') => {
     // token = await verifyTokenValidity(token);
     auth.setCredentials(token);
 
     const drive = google.drive({ version: 'v3', auth }); // need to specify auth as auth: auth or auth: any_other_name
 
     var res = await drive.files.list({
-        q: "'me' in owners and trashed = false",
+        q:`'me' in owners and '${folderId}' in parents and trashed = false`,
         pageSize: 10,
         fields: 'nextPageToken, files(id, name, mimeType, size)',
         key: 'AIzaSyDHtla9ZqVhQm-dqEbFsM-sArr29XizGg4'

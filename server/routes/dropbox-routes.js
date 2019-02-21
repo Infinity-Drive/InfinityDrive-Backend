@@ -20,15 +20,16 @@ router
         }
     })
 
-    .get('/listFiles/:accountId', authenticate, async (req, res) => {
+    .get('/listFiles/:accountId/:folderId*?', authenticate, async (req, res) => {
 
         var accountId = req.params.accountId;
         if (!ObjectID.isValid(accountId))
             return res.status(400).send('Account ID not valid!');
 
+        const folderId = req.params.folderId;
         try {
             const token = await req.user.getTokensForAccounts([accountId]);
-            var files = await dropboxHelper.getFilesForAccount(token);
+            var files = await dropboxHelper.getFilesForAccount(token, folderId);
             res.send(files);
         } catch (error) {
             return res.status(400).send(error);

@@ -12,7 +12,7 @@ router
 
     .post('/', (req, res) => {
 
-        var body = _.pick(req.body, ['email', 'password']);
+        var body = _.pick(req.body, ['email', 'password', 'name']);
 
         var newUser = new User(body);
 
@@ -29,7 +29,7 @@ router
 
     .post('/login', (req, res) => {
 
-        var body = _.pick(req.body, ['email', 'password', 'name']);
+        var body = _.pick(req.body, ['email', 'password']);
 
         User.findByCredentials(body.email, body.password).then((user) => {
             return user.generateAuthToken().then((token) => {
@@ -44,12 +44,10 @@ router
     .get('/getAccounts', authenticate, async (req, res) => {
         const accounts = req.user.accounts.toObject();
         if(accounts){
-            console.time();
             var values = await setAccountStorage(accounts);
             accounts.forEach( (account, i) => {
                 account['storage'] = values[i];
             });
-            console.timeEnd();
             res.send(accounts);
         }
            
