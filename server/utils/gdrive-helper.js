@@ -66,7 +66,7 @@ var getFilesForAccount = async (token, folderId = 'root') => {
     const drive = google.drive({ version: 'v3', auth }); // need to specify auth as auth: auth or auth: any_other_name
 
     var res = await drive.files.list({
-        q:`'me' in owners and '${folderId}' in parents and trashed = false`,
+        q: `'me' in owners and '${folderId}' in parents and trashed = false`,
         pageSize: 10,
         fields: 'nextPageToken, files(id, name, mimeType, size, modifiedTime)',
         key: 'AIzaSyDHtla9ZqVhQm-dqEbFsM-sArr29XizGg4'
@@ -80,7 +80,7 @@ var getFilesForAccount = async (token, folderId = 'root') => {
         return files;
 
     else
-        throw 'No files found!';
+        return [];
 
 }
 

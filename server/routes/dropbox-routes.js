@@ -1,3 +1,5 @@
+var BusBoy = require("busboy");
+
 var express = require('express'),
     router = express.Router();
 
@@ -8,7 +10,7 @@ const { ObjectID } = require('mongodb');
 router
     .get('/authorize', (req, res) => {
         const url = dropboxHelper.getAuthorizationUrl();
-        res.send({url});
+        res.send({ url });
     })
 
     .post('/saveToken', authenticate, async (req, res) => {
@@ -46,7 +48,7 @@ router
         try {
             const token = await req.user.getTokensForAccounts([accountId]);
             const downloadUrl = await dropboxHelper.getDownloadUrl(token, req.params.fileId);
-            res.send({downloadUrl})
+            res.send({ downloadUrl })
         } catch (error) {
             return res.status(400).send(error);
         }
@@ -57,7 +59,7 @@ router
         const accountId = req.params.accountId;
         if (!ObjectID.isValid(accountId))
             return res.status(400).send('Account ID not valid!');
-        
+
         try {
             var token = await req.user.getTokensForAccounts([accountId]);
             const storageInfo = await dropboxHelper.getStorageInfo(token);
@@ -65,6 +67,35 @@ router
         } catch (error) {
             return res.status(400).send(error);
         }
+    })
+
+    .post('/upload/:accountId', authenticate, async (req, res) => {
+
+        try {
+
+            const accountId = req.params.accountId;
+            if (!ObjectID.isValid(accountId))
+                return res.status(400).send('Account ID not valid!');
+
+            var busboy = new BusBoy({ headers: req.headers });
+
+            if (!ObjectID.isValid(accountId))
+                return res.status(400).send('Account ID not valid!');
+
+            const token = await req.user.getTokensForAccounts([accountId]);
+
+            busboy.on("file", async (fieldname, file, filename, encoding, mimetype) => {
+                await dropboxHelper.upload(token, filename, file);
+                res.send('File Uploaded');
+            });
+
+            req.pipe(busboy);
+
+        } catch (e) {
+            res.status(400).send(e);
+            console.log(e);
+        }
+
     })
 
     .delete('/delete/:accountId/:itemId', authenticate, async (req, res) => {
