@@ -60,25 +60,28 @@ var getDownloadUrl = async (token, fileId) => {
 }
 
 var upload = async (token, filename, readableStream, path = '/') => {
+  //TODO: handle promise rejection
+  return new Promise((resolve, reject) => {
 
-  const up = dropboxStream.createDropboxUploadStream({
-    token: token.access_token,
-    path: `${path}` + filename,
-    chunkSize: 1000 * 1024,
-    autorename: true,
-    mode: 'add'
-  })
+    const up = dropboxStream.createDropboxUploadStream({
+      token: token.access_token,
+      path: `${path}` + filename,
+      chunkSize: 1000 * 1024,
+      autorename: true,
+      mode: 'add'
+    })
     .on('error', err => {
       console.log(err);
-      throw 'Unable to upload file to dropbox';
+      reject('Unable to upload file to dropbox');
     })
     .on('progress', res => console.log(filename + ' uploaded: '+ res))
     .on('metadata', metadata => {
-      return metadata;
-    })
-
-  readableStream.pipe(up)
-
+      resolve(metadata);
+    });
+  
+    readableStream.pipe(up);
+  });
+ 
 }
 
 var deleteItem = async (token, itemId) => {
