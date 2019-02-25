@@ -36,7 +36,7 @@ app.get('/', (req, res) => {
 });
 
 app.get("/splitUpload", (req, res) => {
-    res.send("<form action='http://localhost:3000/splitUpload' method='post' enctype='multipart/form-data'><input type='file'/><input type='submit' value='Submit' /></form>");
+    res.send("<form action='http://localhost:3000/splitUpload' method='post' enctype='multipart/form-data'><input type='file' name='myfile'/><input type='submit' value='Submit' /></form>");
 });
 
 
@@ -48,7 +48,7 @@ app.post('/splitUpload', authenticate, async (req, res) => {
         const accounts = await req.user.getAccounts();
         const mergedAccounts = _.filter(accounts, account => account.merged);
 
-        if (mergedAccounts.length >= 2) {
+        if (mergedAccounts.length >= 2) {      
             const tokens = await req.user.getTokensForAccounts(mergedAccounts);
 
             busboy.on("file", async (fieldname, file, filename, encoding, mimetype) => {

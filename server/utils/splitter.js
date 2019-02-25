@@ -1,4 +1,6 @@
 const gdriveHelper = require('./gdrive-helper');
+const odriveHelper = require('./odrive-helper');
+const dropboxHelper = require('./dropbox-helper');
 var { PassThrough } = require('stream');
 
 splitFileAndUpload = async (tokens, readStream, fileSizeInBytes, fileName) => {
@@ -33,7 +35,13 @@ splitFileAndUpload = async (tokens, readStream, fileSizeInBytes, fileName) => {
                 readStream.pipe(writeStreams[currentStreamIndex]);
 
                 if (tokens[currentStreamIndex].accountType == 'gdrive'){
-                    console.log(await gdriveHelper.upload(tokens[currentStreamIndex], `${fileName}.part${currentStreamIndex}`, writeStreams[currentStreamIndex]));
+                    await gdriveHelper.upload(tokens[currentStreamIndex], `${fileName}.part${currentStreamIndex}`, writeStreams[currentStreamIndex]);
+                }
+                if (tokens[currentStreamIndex].accountType == 'dropbox'){
+                    await dropboxHelper.upload(tokens[currentStreamIndex], `${fileName}.part${currentStreamIndex}`, writeStreams[currentStreamIndex]);
+                }
+                if (tokens[currentStreamIndex].accountType == 'odrive'){
+                    await odriveHelper.upload(tokens[currentStreamIndex], `${fileName}.part${currentStreamIndex}`, writeStreams[currentStreamIndex]);
                 }
 
             }
@@ -44,7 +52,13 @@ splitFileAndUpload = async (tokens, readStream, fileSizeInBytes, fileName) => {
 
     readStream.pipe(writeStreams[currentStreamIndex]);
     if (tokens[currentStreamIndex].accountType == 'gdrive'){
-        console.log(await gdriveHelper.upload(tokens[currentStreamIndex], `${fileName}.part${currentStreamIndex}`, writeStreams[currentStreamIndex]));
+        await gdriveHelper.upload(tokens[currentStreamIndex], `${fileName}.part${currentStreamIndex}`, writeStreams[currentStreamIndex]);
+    }
+    if (tokens[currentStreamIndex].accountType == 'dropbox'){
+        await dropboxHelper.upload(tokens[currentStreamIndex], `${fileName}.part${currentStreamIndex}`, writeStreams[currentStreamIndex]);
+    }
+    if (tokens[currentStreamIndex].accountType == 'odrive'){
+        await odriveHelper.upload(tokens[currentStreamIndex], `${fileName}.part${currentStreamIndex}`, writeStreams[currentStreamIndex]);
     }
 
 }
