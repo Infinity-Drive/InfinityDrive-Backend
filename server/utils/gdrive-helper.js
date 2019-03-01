@@ -88,7 +88,7 @@ var upload = async (token, fileName, readStream) => {
     // token = await verifyTokenValidity(token);
     auth.setCredentials(token);
 
-    console.log(`---- Uploading ${fileName} ----`);
+    console.log(`---- Uploading ${fileName} to Google Drive ----`);
     const drive = google.drive({ version: 'v3', auth });
     var fileMetadata = {
         'name': fileName
@@ -98,11 +98,13 @@ var upload = async (token, fileName, readStream) => {
     };
 
     const response = await drive.files.create({
-        resource: fileMetadata,
-        media: media,
-        fields: 'id'
-    }, {
-            onUploadProgress: function (progress) {
+            resource: fileMetadata,
+            media: media,
+            fields: 'id'
+        },{
+            // max redirects prevents backpressure, if not used, whole stream is buffered first
+            maxRedirects: 0,
+            onUploadProgress: (progress) => {
                 console.log(`Uploaded ${fileName}:`, progress.bytesRead.toString());
             }
         }).catch((e) => {
