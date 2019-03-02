@@ -36,9 +36,21 @@ router
                 const tokens = await req.user.getTokensForAccounts(mergedAccounts);
 
                 busboy.on("file", async (fieldname, file, name, encoding, mimeType) => {
-                    await splitter.splitFileAndUpload(tokens, file, req.headers['content-length'], name);
+                    var ids = await splitter.splitFileAndUpload(tokens, file, req.headers['content-length'], name);
+                    var parts = [];
+                    await mergedAccounts.forEach((account, i) => {
+                        parts.push({
+                            accountType: account['accountType'],
+                            accountId: account['_id'],
+                            partId: ids[i]
+                        })
+                    });
+
+                    var splitDirectory = await req.user.getSplitDirectory();
+                    var splitFileId = await splitDirectory.addFile(name, req.headers['content-length'], parts);
+                    
                     res.send({
-                        id: 'split file id will go here',
+                        id: splitFileId.toString(),
                         name,
                         mimeType,
                         modifiedTime: new Date().toISOString(),

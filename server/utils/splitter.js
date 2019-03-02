@@ -3,64 +3,66 @@ const odriveHelper = require('./odrive-helper');
 const dropboxHelper = require('./dropbox-helper');
 var { PassThrough } = require('stream');
 
-splitFileAndUpload = async (tokens, readStream, fileSizeInBytes, fileName) => {
+splitFileAndUpload = (tokens, readStream, fileSize, fileName, response) => {
 
-    var currentWriteStreamSize = 0;
-    var currentStreamIndex = 0;
-    var totalRead = 0;
-    var writeStreams = [];
-    var maxWriteStreamSize = Math.ceil(fileSizeInBytes / tokens.length);
+    return new Promise((resolve, reject) => {
 
-    for (var i = 0; i < tokens.length; i++)
-        writeStreams.push(new PassThrough());
+        var duplexStreamSize = 0; //size of current duplex stream
+        var index = 0;            //index of current duplex stream
+        var maxDuplexStreamSize = Math.ceil(fileSize / tokens.length);
+        var totalRead = 0;
+        var duplexStreams = [];
+        var partsId = [];         //ids for each upload chunk
 
-    readStream.on('data', async (chunk) => {
+        for (var i = 0; i < tokens.length; i++)
+            duplexStreams.push(new PassThrough());
 
-        currentWriteStreamSize += chunk.length;
-        totalRead += chunk.length;  //totalRead is used to make sure that the below if stmt runs for the last stream even if contains less data than maxWriteStreamSize
+        readStream.on('data', async (chunk) => {
 
-        if (currentWriteStreamSize > maxWriteStreamSize) {
+            duplexStreamSize += chunk.length;
+            totalRead += chunk.length;  //totalRead is used to make sure that the below if stmt runs for the last stream even if contains less data than maxWriteStreamSize
 
-            await readStream.unpipe(writeStreams[currentStreamIndex]); //unpipe and destroy finished stream
-            writeStreams[currentStreamIndex].end();
-            await writeStreams[currentStreamIndex].destroy();
+            if (duplexStreamSize > maxDuplexStreamSize) {
 
-            if (totalRead != fileSizeInBytes) {  //whole read stream not read
+                await readStream.unpipe(duplexStreams[index]); //unpipe and destroy finished stream
+                duplexStreams[index].end();
+                await duplexStreams[index].destroy();
 
-                currentWriteStreamSize = 0; //reset size for new stream
-                currentStreamIndex++; //get next stream index
-
-                console.log(`piping stream ${currentStreamIndex}`);
-
-                readStream.pipe(writeStreams[currentStreamIndex]);
-
-                if (tokens[currentStreamIndex].accountType == 'gdrive'){
-                    await gdriveHelper.upload(tokens[currentStreamIndex], `${fileName}.part${currentStreamIndex}`, writeStreams[currentStreamIndex]);
-                }
-                if (tokens[currentStreamIndex].accountType == 'dropbox'){
-                    await dropboxHelper.upload(tokens[currentStreamIndex], `${fileName}.part${currentStreamIndex}`, writeStreams[currentStreamIndex]);
-                }
-                if (tokens[currentStreamIndex].accountType == 'odrive'){
-                    await odriveHelper.upload(tokens[currentStreamIndex], `${fileName}.part${currentStreamIndex}`, writeStreams[currentStreamIndex]);
+                if (totalRead != fileSize) {  //whole read stream not read
+                    duplexStreamSize = 0; //reset size for new stream
+                    index++; //get next stream index
+                    readStream.pipe(duplexStreams[index]);
+                    partsId[index] = startUpload(tokens[index], fileName, duplexStreams[index], index);
                 }
 
             }
 
-        }
+        });
+
+        readStream.on('end', async () => {
+            //since we've read the whole stream, we now wait for each chunk to finish uploading and return its id
+            var ids = await Promise.all(partsId);
+            resolve(ids);
+        });
+
+        readStream.pipe(duplexStreams[index]);
+        partsId[index] = startUpload(tokens[index], fileName, duplexStreams[index], index);
 
     });
 
-    readStream.pipe(writeStreams[currentStreamIndex]);
-    if (tokens[currentStreamIndex].accountType == 'gdrive'){
-        await gdriveHelper.upload(tokens[currentStreamIndex], `${fileName}.part${currentStreamIndex}`, writeStreams[currentStreamIndex]);
-    }
-    if (tokens[currentStreamIndex].accountType == 'dropbox'){
-        await dropboxHelper.upload(tokens[currentStreamIndex], `${fileName}.part${currentStreamIndex}`, writeStreams[currentStreamIndex]);
-    }
-    if (tokens[currentStreamIndex].accountType == 'odrive'){
-        await odriveHelper.upload(tokens[currentStreamIndex], `${fileName}.part${currentStreamIndex}`, writeStreams[currentStreamIndex]);
-    }
+}
 
+var startUpload = (token, fileName, stream, index) => {
+    var fileName = `${fileName}.infinitydrive.part${index}`;
+    if (token.accountType === 'gdrive') {
+        return gdriveHelper.upload(token, fileName, stream);
+    }
+    if (token.accountType === 'dropbox') {
+        return dropboxHelper.upload(token, fileName, stream);
+    }
+    if (token.accountType === 'odrive') {
+        return odriveHelper.upload(token, fileName, stream);
+    }
 }
 
 module.exports = { splitFileAndUpload }

@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const _ = require('lodash');
 const bcrypt = require('bcryptjs');
 
+var { SplitDirectory } = require('./split-directory');
+
 mongoose.connect('mongodb://localhost:27017/InfinityDrive', { useNewUrlParser: true });
 mongoose.set('useCreateIndex', true);
 mongoose.set('useFindAndModify', false);
@@ -66,7 +68,7 @@ var UserSchema = new mongoose.Schema({
         }
     }],
 
-    splitDirectoryId: { type: String }
+    splitDirectoryId: { type: mongoose.Schema.Types.ObjectId }
 });
 
 UserSchema.methods.toJSON = function () {    //overriding built in method (we want user to only get limited info back)
@@ -258,6 +260,20 @@ UserSchema.methods.removeAccount = function (accountId) {
             }
         }
     });
+};
+
+UserSchema.methods.getSplitDirectory = async function () {
+    var user = this;
+    var directory = await SplitDirectory.findOne({'_id': user.splitDirectoryId});
+    
+    if (directory)
+        return directory;
+    
+    else {
+        var newSplitDirectory = new SplitDirectory({});
+        newSplitDirectory = await newSplitDirectory.save();
+        return newSplitDirectory;
+    }
 };
 
 //define Model method (not an instance method like generateAuthToken), i.e. static method

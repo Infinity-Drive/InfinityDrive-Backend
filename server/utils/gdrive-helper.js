@@ -105,7 +105,7 @@ var upload = async (token, fileName, readStream) => {
             // max redirects prevents backpressure, if not used, whole stream is buffered first
             maxRedirects: 0,
             onUploadProgress: (progress) => {
-                console.log(`Uploaded ${fileName}:`, progress.bytesRead.toString());
+                console.log(progress.bytesRead.toString() + ' uploaded');
             }
         }).catch((e) => {
             console.log(e);

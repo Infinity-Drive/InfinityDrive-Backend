@@ -2,6 +2,8 @@ const _ = require('lodash');
 const { ObjectID } = require('mongodb');
 
 var { User } = require('../models/user');
+var { SplitDirectory } = require('../models/split-directory');
+
 var { authenticate } = require('../middleware/authenticate');
 var { getAccountsStorage } = require('../utils/utils');
 
@@ -10,11 +12,14 @@ var express = require('express'),
 
 router
 
-    .post('/', (req, res) => {
+    .post('/', async (req, res) => {
 
         var body = _.pick(req.body, ['email', 'password', 'name']);
 
         var newUser = new User(body);
+        var splitDirectory = new SplitDirectory({});
+        splitDirectory = await splitDirectory.save();
+        newUser['splitDirectoryId'] = splitDirectory['_id'];
 
         newUser.save().then(() => {
             return newUser.generateAuthToken();    //catched by *** then call (right below this)

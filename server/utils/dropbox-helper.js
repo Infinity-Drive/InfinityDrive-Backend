@@ -63,6 +63,8 @@ var upload = async (token, filename, readableStream, path = '/') => {
   //TODO: handle promise rejection
   return new Promise((resolve, reject) => {
 
+    console.log(`---- Uploading ${filename} to Dropbox ----`);
+
     const up = dropboxStream.createDropboxUploadStream({
       token: token.access_token,
       path: `${path}` + filename,
@@ -74,9 +76,9 @@ var upload = async (token, filename, readableStream, path = '/') => {
       console.log(err);
       reject('Unable to upload file to dropbox');
     })
-    .on('progress', res => console.log(filename + ' uploaded: '+ res))
+    .on('progress', res => console.log(res + ' uploaded'))
     .on('metadata', metadata => {
-      resolve(metadata);
+      resolve(metadata.id);
     });
   
     readableStream.pipe(up);
