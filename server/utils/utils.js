@@ -2,33 +2,29 @@ const odriveHelper = require('./odrive-helper.js');
 const dropboxHelper = require('./dropbox-helper.js');
 const gdriveHelper = require('./gdrive-helper');
 
-var getAccountsStorage = (accounts) => {
+const getAccountsStorage = (accounts) => {
+  const storageInfo = [];
 
-    var storageInfo = [];
+  accounts.forEach((account, i) => {
+    if (account.accountType === 'gdrive') {
+      storageInfo[i] = gdriveHelper.getStorageInfo(account.token);
+      account.account = 'Google Drive';
+    }
 
-    accounts.forEach((account, i) => {
+    if (account.accountType === 'odrive') {
+      storageInfo[i] = odriveHelper.getStorageInfo(account.token);
+      account.account = 'OneDrive';
+    }
 
-        if (account.accountType === 'gdrive') {
-            storageInfo[i] = gdriveHelper.getStorageInfo(account.token);
-            account['account'] = 'Google Drive';
-        }
+    if (account.accountType === 'dropbox') {
+      storageInfo[i] = dropboxHelper.getStorageInfo(account.token);
+      account.account = 'Dropbox';
+    }
 
-        if (account.accountType === 'odrive') {
-            storageInfo[i] = odriveHelper.getStorageInfo(account.token);
-            account['account'] = 'OneDrive';
-        }
+    delete account.token;
+  });
 
-        if (account.accountType === 'dropbox') {
-            storageInfo[i] = dropboxHelper.getStorageInfo(account.token);
-            account['account'] = 'Dropbox';
-        }
+  return Promise.all(storageInfo);
+};
 
-        delete account['token'];
-
-    });
-
-    return Promise.all(storageInfo);
-
-}
-
-module.exports = { getAccountsStorage }
+module.exports = { getAccountsStorage };

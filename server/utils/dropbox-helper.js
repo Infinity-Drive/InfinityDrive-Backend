@@ -3,96 +3,88 @@ const fetch = require('isomorphic-fetch');
 const dropboxStream = require('dropbox-stream');
 const { dropboxCreds } = require('../config/config');
 
-var dbx = new Dropbox({
-  fetch: fetch,
+const dbx = new Dropbox({
+  fetch,
   clientId: dropboxCreds.clientId,
-  clientSecret: dropboxCreds.clientSecret
+  clientSecret: dropboxCreds.clientSecret,
 });
 
-var getAuthorizationUrl = () => {
-  return dbx.getAuthenticationUrl(dropboxCreds.redirectUri, null, 'code')
-}
+const getAuthorizationUrl = () => dbx.getAuthenticationUrl(dropboxCreds.redirectUri, null, 'code');
 
-var saveToken = async (req, user) => {
+const getUserInfo = async (token) => {
+  const dbx = new Dropbox({ accessToken: token, fetch });
+  const info = await dbx.usersGetCurrentAccount().catch((e) => {
+    console.log(e);
+    throw new Error('Error getting user info from Dropbox');
+  });
+  return info;
+};
+
+const saveToken = async (req, user) => {
   try {
-    let code = req.body.code;
+    const code = req.body.code;
     const token = await dbx.getAccessTokenFromCode(dropboxCreds.redirectUri, code);
     const userInfo = await getUserInfo(token);
-    const accounts = await user.addAccount({ 'access_token': token }, 'dropbox', userInfo.email);
+    const accounts = await user.addAccount({ access_token: token }, 'dropbox', userInfo.email);
     return accounts;
   } catch (e) {
     console.log(e);
     throw e;
   }
+};
 
-}
+const getFilesForAccount = async (token, folderId = '') => {
+  const dbx = new Dropbox({ accessToken: token.access_token, fetch });
+  return dbx.filesListFolder({ path: folderId });
+};
 
-var getFilesForAccount = async (token, folderId = '') => {
-  var dbx = new Dropbox({ accessToken: token.access_token, fetch: fetch });
-  return await dbx.filesListFolder({ path: folderId });
-}
-
-var getUserInfo = async (token) => {
-  var dbx = new Dropbox({ accessToken: token, fetch: fetch });
-  const info = await dbx.usersGetCurrentAccount().catch((e) => {
-    console.log(e);
-    throw 'Error getting user info from Dropbox';
-  });
-  return info;
-}
-
-var getStorageInfo = async (token) => {
-  var dbx = new Dropbox({ accessToken: token.access_token, fetch: fetch });
+const getStorageInfo = async (token) => {
+  const dbx = new Dropbox({ accessToken: token.access_token, fetch });
   const info = await dbx.usersGetSpaceUsage().catch((e) => {
     console.log(e);
-    throw 'Error getting storage info from Dropbox';
+    throw new Error('Error getting storage info from Dropbox');
   });
   return { total: info.allocation.allocated.toString(), used: info.used.toString() };
-}
+};
 
-var getDownloadUrl = async (token, fileId) => {
-  var dbx = new Dropbox({ accessToken: token.access_token, fetch: fetch });
+const getDownloadUrl = async (token, fileId) => {
+  const dbx = new Dropbox({ accessToken: token.access_token, fetch });
   const response = await dbx.filesGetTemporaryLink({ path: fileId }).catch((e) => {
     console.log(e);
-    throw 'Unable to get file from Dropbox';
+    throw new Error('Unable to get file from Dropbox');
   });
   return response.link;
-}
+};
 
-var upload = async (token, filename, readableStream, path = '/') => {
-  //TODO: handle promise rejection
-  return new Promise((resolve, reject) => {
+const upload = async (token, filename, readableStream, path = '/') => new Promise((resolve, reject) => {
+  console.log(`---- Uploading ${filename} to Dropbox ----`);
 
-    console.log(`---- Uploading ${filename} to Dropbox ----`);
-
-    const up = dropboxStream.createDropboxUploadStream({
-      token: token.access_token,
-      path: `${path}` + filename,
-      chunkSize: 1000 * 1024,
-      autorename: true,
-      mode: 'add'
-    })
-    .on('error', err => {
+  const up = dropboxStream.createDropboxUploadStream({
+    token: token.access_token,
+    path: `${path}${filename}`,
+    chunkSize: 1000 * 1024,
+    autorename: true,
+    mode: 'add',
+  })
+    .on('error', (err) => {
       console.log(err);
       reject('Unable to upload file to dropbox');
     })
-    .on('progress', res => console.log(res + ' uploaded'))
-    .on('metadata', metadata => {
+    .on('progress', res => console.log(`${res} uploaded`))
+    .on('metadata', (metadata) => {
       resolve(metadata.id);
     });
-  
-    readableStream.pipe(up);
-  });
- 
-}
 
-var deleteItem = async (token, itemId) => {
-  var dbx = new Dropbox({ accessToken: token.access_token, fetch: fetch });
+  readableStream.pipe(up);
+});
+
+const deleteItem = async (token, itemId) => {
+  const dbx = new Dropbox({ accessToken: token.access_token, fetch });
   await dbx.filesDelete({ path: itemId }).catch((e) => {
     console.log(e);
-    throw 'Unable to delete file from Dropbox';
+    throw new Error('Unable to delete file from Dropbox');
   });
-}
+};
 
 module.exports = {
   getAuthorizationUrl,
@@ -101,5 +93,5 @@ module.exports = {
   getDownloadUrl,
   getStorageInfo,
   upload,
-  deleteItem
-}
+  deleteItem,
+};
