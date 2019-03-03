@@ -15,6 +15,8 @@ const SplitDirectorySchema = new mongoose.Schema({
   },
   size: { type: Number },
   content: [this],
+  mimeType: { type: String },
+  modifiedTime: { type: Date },
   parts: [
     {
       accountType: {
@@ -32,7 +34,7 @@ const SplitDirectorySchema = new mongoose.Schema({
 
 });
 
-SplitDirectorySchema.methods.addFile = async function (fileName, size, parts) {
+SplitDirectorySchema.methods.addFile = async function (fileName, size, parts, mimeType) {
   const directory = this;
   const id = new mongoose.Types.ObjectId();
 
@@ -42,6 +44,8 @@ SplitDirectorySchema.methods.addFile = async function (fileName, size, parts) {
       fileName,
       folder: false,
       size,
+      mimeType,
+      modifiedTime: new Date().toISOString(),
       parts,
     }),
   );

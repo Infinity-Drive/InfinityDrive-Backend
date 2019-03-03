@@ -38,13 +38,13 @@ router
           await mergedAccounts.forEach((account, i) => {
             parts.push({
               accountType: account.accountType,
-              accountId: account.id,
+              accountId: account._id,
               partId: ids[i],
             });
           });
 
           const splitDirectory = await req.user.getSplitDirectory();
-          const splitFileId = await splitDirectory.addFile(name, req.headers['content-length'], parts);
+          const splitFileId = await splitDirectory.addFile(name, req.headers['content-length'], parts, mimeType);
 
           res.send({
             id: splitFileId.toString(),
