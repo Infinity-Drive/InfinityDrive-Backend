@@ -157,21 +157,50 @@ const getStorageInfo = async (token) => {
 
   return { total: info.data.quota.total.toString(), used: info.data.quota.used.toString() };
 };
+const upload = async (token, filename, readStream, size) => new Promise((resolve, reject) => {
+  let url;
+  let uploadBytes = 0;
+  let chunkToUpload;
 
-const upload = async (token, filename, readableStream) => {
-  token = await verifyTokenValidity(token);
+  readStream.on('data', async (chunk) => {
+    chunkToUpload = chunk;
 
-  const item = await oneDriveAPI.items.uploadSimple({
-    accessToken: token.access_token,
-    filename,
-    readableStream,
-  }).catch((e) => {
-    console.log(e);
-    throw new Error('Unable to upload file to OneDrive');
+    if (!url) {
+      token = await verifyTokenValidity(token);
+      const response = await axios({
+        method: 'POST',
+        url: `https://graph.microsoft.com/v1.0/me/drive/root:/${filename}:/createUploadSession`,
+        body: {
+          '@microsoft.graph.conflictBehavior': 'rename',
+          fileSystemInfo: { '@odata.type': 'microsoft.graph.fileSystemInfo' },
+          name: filename,
+        },
+        headers: {
+          Authorization: `Bearer ${token.access_token}`,
+          'Content-Type': 'aplication/json',
+        },
+      }).catch(e => reject(e));
+
+      url = response.data.uploadUrl;
+    }
+
+    const response = await axios({
+      method: 'PUT',
+      url,
+      headers: {
+        'Content-Length': chunkToUpload.length,
+        'Content-Range': `bytes ${uploadBytes}-${(uploadBytes + chunkToUpload.length) - 1}/${size}`,
+      },
+      data: chunkToUpload,
+    }).catch(e => reject(e));
+
+    uploadBytes += chunkToUpload.length;
+
+    if (response.status === 203 || response.status === 200) {
+      resolve();
+    }
   });
-
-  return item;
-};
+});
 
 const deleteItem = async (token, itemId) => {
   token = await verifyTokenValidity(token);
