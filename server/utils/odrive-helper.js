@@ -157,47 +157,62 @@ const getStorageInfo = async (token) => {
 
   return { total: info.data.quota.total.toString(), used: info.data.quota.used.toString() };
 };
-const upload = async (token, filename, readStream, size) => new Promise((resolve, reject) => {
-  let url;
-  let uploadBytes = 0;
-  let chunkToUpload;
+
+const upload = (token, filename, readStream, size) => new Promise(async (resolve, reject) => {
+  console.log(`---- Uploading ${filename} to Onedrive ----`);
+  let uploadedBytes = 0;
+  let chunksToUpload = [];
+  let chunksToUploadSize = 0;
+
+  token = await verifyTokenValidity(token);
+  // get session link
+  const response = await axios({
+    method: 'POST',
+    url: `https://graph.microsoft.com/v1.0/me/drive/root:/${filename}:/createUploadSession`,
+    body: {
+      '@microsoft.graph.conflictBehavior': 'rename',
+      fileSystemInfo: { '@odata.type': 'microsoft.graph.fileSystemInfo' },
+      name: filename,
+    },
+    headers: {
+      Authorization: `Bearer ${token.access_token}`,
+      'Content-Type': 'aplication/json',
+    },
+  }).catch(e => reject(e));
+
+  const url = response.data.uploadUrl;
 
   readStream.on('data', async (chunk) => {
-    chunkToUpload = chunk;
+    chunksToUpload.push(chunk);
+    chunksToUploadSize += chunk.length;
 
-    if (!url) {
-      token = await verifyTokenValidity(token);
+    // upload only if we've 20 chunks in memory OR we're uploading the final chunk
+    if (chunksToUpload.length === 20 || chunksToUploadSize + uploadedBytes === size) {
+      readStream.pause();
+      // make buffer from the chunks
+      const data = Buffer.concat(chunksToUpload, chunksToUploadSize);
+
       const response = await axios({
-        method: 'POST',
-        url: `https://graph.microsoft.com/v1.0/me/drive/root:/${filename}:/createUploadSession`,
-        body: {
-          '@microsoft.graph.conflictBehavior': 'rename',
-          fileSystemInfo: { '@odata.type': 'microsoft.graph.fileSystemInfo' },
-          name: filename,
-        },
+        method: 'PUT',
+        url,
         headers: {
-          Authorization: `Bearer ${token.access_token}`,
-          'Content-Type': 'aplication/json',
+          'Content-Length': chunksToUploadSize,
+          'Content-Range': `bytes ${uploadedBytes}-${(uploadedBytes + chunksToUploadSize) - 1}/${size}`,
         },
+        data,
       }).catch(e => reject(e));
 
-      url = response.data.uploadUrl;
-    }
+      // reset for next chunks
+      uploadedBytes += chunksToUploadSize;
+      chunksToUpload = [];
+      chunksToUploadSize = 0;
 
-    const response = await axios({
-      method: 'PUT',
-      url,
-      headers: {
-        'Content-Length': chunkToUpload.length,
-        'Content-Range': `bytes ${uploadBytes}-${(uploadBytes + chunkToUpload.length) - 1}/${size}`,
-      },
-      data: chunkToUpload,
-    }).catch(e => reject(e));
+      console.log(`${uploadedBytes} uploaded`);
 
-    uploadBytes += chunkToUpload.length;
-
-    if (response.status === 203 || response.status === 200) {
-      resolve();
+      if (response.status === 201 || response.status === 203 || response.status === 200) {
+        resolve();
+      }
+      readStream.resume();
     }
   });
 });

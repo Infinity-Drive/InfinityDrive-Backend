@@ -76,7 +76,7 @@ router
         return res.status(400).send('Account ID not valid!');
       }
 
-      const busboy = new BusBoy({ headers: req.headers, highWaterMark: 32 * 4 * 1024 });
+      const busboy = new BusBoy({ headers: req.headers });
 
       if (!ObjectID.isValid(accountId)) {
         return res.status(400).send('Account ID not valid!');
@@ -85,7 +85,7 @@ router
       const token = await req.user.getTokensForAccounts([accountId]);
 
       busboy.on('file', async (fieldname, file, filename, encoding, mimetype) => {
-        await odriveHelper.upload(token, filename, file, req.headers['x-filesize']);
+        await odriveHelper.upload(token, filename, file, Number(req.headers['x-filesize']));
         res.send('File Uploaded');
       });
 
