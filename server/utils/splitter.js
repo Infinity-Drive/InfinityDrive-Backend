@@ -4,7 +4,7 @@ const gdriveHelper = require('./gdrive-helper');
 const odriveHelper = require('./odrive-helper');
 const dropboxHelper = require('./dropbox-helper');
 
-const startUpload = (token, originalFileName, stream, index) => {
+const startUpload = (token, originalFileName, stream, index, size) => {
   const fileName = `${originalFileName}.infinitydrive.part${index}`;
   if (token.accountType === 'gdrive') {
     return gdriveHelper.upload(token, fileName, stream);
@@ -13,47 +13,42 @@ const startUpload = (token, originalFileName, stream, index) => {
     return dropboxHelper.upload(token, fileName, stream);
   }
   if (token.accountType === 'odrive') {
-    return odriveHelper.upload(token, fileName, stream);
+    return odriveHelper.upload(token, fileName, stream, size);
   }
 };
 
 const splitFileAndUpload = (tokens, readStream, fileSize, fileName) => new Promise((resolve) => {
-  // size of current duplex stream
-  let duplexStreamSize = 0;
   // index of current duplex stream
   let index = 0;
-  const maxDuplexStreamSize = Math.ceil(fileSize / tokens.length);
+  const chunksPerAccount = Math.ceil((fileSize / 16000) / tokens.length);
+  let uploadedChunks = 0;
   let totalRead = 0;
   const duplexStreams = [];
   // ids for each upload chunk
   const partsId = [];
 
   for (let i = 0; i < tokens.length; i += 1) {
-    duplexStreams.push(new PassThrough());
+    duplexStreams.push(new PassThrough({ highWaterMark: 16000 }));
   }
 
-  readStream.on('data', async (chunk) => {
-    duplexStreamSize += chunk.length;
-    /**
-     * totalRead is used to make sure that the below if stmt runs for
-     * the last stream even if contains less data than maxWriteStreamSize
-     */
-    totalRead += chunk.length;
+  readStream.on('readable', function () {
+    let chunk;
 
-    if (duplexStreamSize > maxDuplexStreamSize) {
-      // unpipe and destroy finished stream
-      await readStream.unpipe(duplexStreams[index]);
-      duplexStreams[index].end();
-      await duplexStreams[index].destroy();
+    // eslint-disable-next-line no-cond-assign
+    while (chunk = this.read(16000)) {
+      uploadedChunks += 1;
+      totalRead += chunk.length;
 
-      // whole read stream not read
-      if (totalRead !== fileSize) {
-        // reset size for new stream
-        duplexStreamSize = 0;
-        // get next stream index
+      if (uploadedChunks === chunksPerAccount) {
+        // unpipe and destroy finished stream
+        readStream.unpipe(duplexStreams[index]);
+        duplexStreams[index].end();
+
         index += 1;
         readStream.pipe(duplexStreams[index]);
-        partsId[index] = startUpload(tokens[index], fileName, duplexStreams[index], index);
+        const uploadSize = index !== tokens.length - 1 ? chunksPerAccount * 16000 : fileSize - totalRead;
+
+        partsId[index] = startUpload(tokens[index], fileName, duplexStreams[index], index, uploadSize);
       }
     }
   });
@@ -68,7 +63,7 @@ const splitFileAndUpload = (tokens, readStream, fileSize, fileName) => new Promi
   });
 
   readStream.pipe(duplexStreams[index]);
-  partsId[index] = startUpload(tokens[index], fileName, duplexStreams[index], index);
+  partsId[index] = startUpload(tokens[index], fileName, duplexStreams[index], index, chunksPerAccount * 16000);
 });
 
 module.exports = { splitFileAndUpload };

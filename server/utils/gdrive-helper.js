@@ -162,7 +162,7 @@ const upload = async (token, fileName, readStream) => {
     // max redirects prevents backpressure, if not used, whole stream is buffered first
     maxRedirects: 0,
     onUploadProgress: (progress) => {
-      console.log(`${progress.bytesRead.toString()} uploaded`);
+      console.log(`${progress.bytesRead.toString()} uploaded gdrive`);
     },
   }).catch((e) => {
     console.log(e);
