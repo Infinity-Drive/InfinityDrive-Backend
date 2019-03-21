@@ -18,11 +18,12 @@
         "no-param-reassign": "warn",
         "consistent-return": "warn",
         "prefer-destructuring": "warn",
-        "brace-style": ["error", "1tbs", { "allowSingleLine": false }],
+        "brace-style": ["error", "stroustrup", { "allowSingleLine": false }],
         "func-names": "off",
         "no-underscore-dangle": "off",
         "prefer-promise-reject-errors": "warn",
         "no-shadow": "warn", 
-        "no-use-before-define": "warn"
+        "no-use-before-define": "warn",
+        "no-loop-func": "off"
     }
 }
