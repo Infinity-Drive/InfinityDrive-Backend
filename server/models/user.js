@@ -110,7 +110,8 @@ UserSchema.methods.addAccount = function (token, accountType, email) {
 
     if (alreadyAdded) {
       reject('Account already exists');
-    } else {
+    }
+    else {
       user.accounts.push({ accountType, token, email });
       // we're returning this promise so that we can catch it in server.js using a chained promise
       user.save().then(() => {
@@ -142,8 +143,8 @@ UserSchema.methods.getMergedAccounts = function () {
     // omit the account token for security
 
     if (user.accounts.length !== 0) {
-      //const mergedAccounts = _.filter(user.accounts.toObject(), account => account.merged);
-      
+      // const mergedAccounts = _.filter(user.accounts.toObject(), account => account.merged);
+
       const mergedAccounts = user.accounts.toObject();
 
       if (mergedAccounts.length !== 0) {
@@ -173,7 +174,8 @@ UserSchema.methods.getTokensForAccounts = function (accountIds) {
         // we have multiple tokens but don't know of which account
         token.accountType = user.accounts.id(accountId).accountType;
         tokens.push(token);
-      } else {
+      }
+      else {
         return reject('One or more account ids was not found!');
       }
     });
@@ -197,7 +199,8 @@ UserSchema.methods.changeMergedStatus = function (accountIds, status) {
       if (user.accounts.id(accountId)) {
         const account = user.accounts.id(accountId);
         account.merged = status;
-      } else {
+      }
+      else {
         error = true;
       }
     });
@@ -207,7 +210,8 @@ UserSchema.methods.changeMergedStatus = function (accountIds, status) {
       user.save().then(() => resolve('Updated accounts!'), (e) => {
         reject(e);
       });
-    } else {
+    }
+    else {
       reject('One or more account ids was incorrect!');
     }
   });
@@ -268,7 +272,8 @@ UserSchema.statics.findByToken = function (token) {
 
   try {
     decoded = jwt.verify(token, 'my secret');
-  } catch (e) {
+  }
+  catch (e) {
     return Promise.reject();
   }
 
@@ -293,7 +298,8 @@ UserSchema.statics.findByCredentials = function (email, password) {
       bcrypt.compare(password, user.password, (err, res) => {
         if (res) {
           resolve(user);
-        } else {
+        }
+        else {
           reject();
         }
       });
@@ -313,7 +319,8 @@ UserSchema.pre('save', function (next) {
         next();
       });
     });
-  } else {
+  }
+  else {
     next();
   }
 });

@@ -32,7 +32,8 @@ router
       const user = await User.findByCredentials(body.email, body.password);
       const token = await user.generateAuthToken();
       res.header('x-auth', token).send(user);
-    } catch (error) {
+    }
+    catch (error) {
       res.status(401).send(error);
     }
   })
@@ -45,7 +46,8 @@ router
         account.storage = values[i];
       });
       res.send(accounts);
-    } else {
+    }
+    else {
       res.status(400).send('No accounts found');
     }
   })
@@ -56,7 +58,8 @@ router
       const body = _.pick(req.body, ['accountIds', 'status']);
       const msg = req.user.changeMergedStatus(body.accountIds, body.status);
       res.send(msg);
-    } catch (error) {
+    }
+    catch (error) {
       res.status(400).send(error);
     }
   })

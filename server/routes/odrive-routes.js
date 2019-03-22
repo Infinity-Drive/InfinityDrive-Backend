@@ -18,7 +18,8 @@ router
     try {
       const accounts = await odriveHelper.saveToken(req, req.user);
       res.send(accounts);
-    } catch (error) {
+    }
+    catch (error) {
       return res.status(400).send(error);
     }
   })
@@ -34,7 +35,8 @@ router
       const token = await req.user.getTokensForAccounts([accountId]);
       const files = await odriveHelper.getFilesForAccount(token, folderId);
       res.send(files);
-    } catch (error) {
+    }
+    catch (error) {
       return res.status(400).send(error);
     }
   })
@@ -49,7 +51,8 @@ router
       const token = await req.user.getTokensForAccounts([accountId]);
       const downloadUrl = await odriveHelper.getDownloadUrl(token, req.params.fileId);
       res.send({ downloadUrl });
-    } catch (error) {
+    }
+    catch (error) {
       return res.status(400).send(error);
     }
   })
@@ -64,7 +67,8 @@ router
       const token = await req.user.getTokensForAccounts([accountId]);
       const storageInfo = await odriveHelper.getStorageInfo(token);
       res.send(storageInfo);
-    } catch (error) {
+    }
+    catch (error) {
       return res.status(400).send(error);
     }
   })
@@ -90,7 +94,8 @@ router
       });
 
       req.pipe(busboy);
-    } catch (e) {
+    }
+    catch (e) {
       res.status(400).send(new Error('Error uploading to Onedrive'));
       console.log(e);
     }
@@ -106,7 +111,8 @@ router
       const token = await req.user.getTokensForAccounts([accountId]);
       await odriveHelper.deleteItem(token, req.params.itemId);
       res.send('Item deleted');
-    } catch (error) {
+    }
+    catch (error) {
       return res.status(400).send(error);
     }
   });

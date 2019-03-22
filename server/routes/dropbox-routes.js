@@ -17,7 +17,8 @@ router
     try {
       const accounts = await dropboxHelper.saveToken(req, req.user);
       res.send(accounts);
-    } catch (error) {
+    }
+    catch (error) {
       return res.status(400).send(error);
     }
   })
@@ -33,7 +34,8 @@ router
       const token = await req.user.getTokensForAccounts([accountId]);
       const files = await dropboxHelper.getFilesForAccount(token, folderId);
       res.send(files);
-    } catch (error) {
+    }
+    catch (error) {
       return res.status(400).send(error);
     }
   })
@@ -48,7 +50,8 @@ router
       const token = await req.user.getTokensForAccounts([accountId]);
       const downloadUrl = await dropboxHelper.getDownloadUrl(token, req.params.fileId);
       res.send({ downloadUrl });
-    } catch (error) {
+    }
+    catch (error) {
       return res.status(400).send(error);
     }
   })
@@ -63,7 +66,8 @@ router
       const token = await req.user.getTokensForAccounts([accountId]);
       const storageInfo = await dropboxHelper.getStorageInfo(token);
       res.send(storageInfo);
-    } catch (error) {
+    }
+    catch (error) {
       return res.status(400).send(error);
     }
   })
@@ -89,7 +93,8 @@ router
       });
 
       req.pipe(busboy);
-    } catch (e) {
+    }
+    catch (e) {
       res.status(400).send(e);
       console.log(e);
     }
@@ -105,7 +110,8 @@ router
       const token = await req.user.getTokensForAccounts([accountId]);
       await dropboxHelper.deleteItem(token, req.params.itemId);
       res.send('Item deleted');
-    } catch (error) {
+    }
+    catch (error) {
       return res.status(400).send(error);
     }
   });

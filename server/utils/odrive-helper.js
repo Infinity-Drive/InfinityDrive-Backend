@@ -104,7 +104,8 @@ const saveToken = async (req, user) => {
     const email = await getUserInfo(token.access_token);
     const accounts = await user.addAccount(token, 'odrive', email);
     return accounts;
-  } catch (e) {
+  }
+  catch (e) {
     throw e;
   }
 };
@@ -160,6 +161,7 @@ const getStorageInfo = async (token) => {
 
 const upload = (token, filename, readStream, size) => new Promise(async (resolve, reject) => {
   console.log(`---- Uploading ${filename} to Onedrive ----`);
+  console.log('ONEDRIVE SIZE OF FILE', size);
   let uploadedBytes = 0;
   let chunksToUpload = [];
   let chunksToUploadSize = 0;
@@ -207,10 +209,10 @@ const upload = (token, filename, readStream, size) => new Promise(async (resolve
       chunksToUpload = [];
       chunksToUploadSize = 0;
 
-      console.log(`${uploadedBytes} uploaded`);
+      console.log(`${uploadedBytes} uploaded odrive`);
 
       if (response.status === 201 || response.status === 203 || response.status === 200) {
-        resolve();
+        resolve(response.data.id);
       }
       readStream.resume();
     }
