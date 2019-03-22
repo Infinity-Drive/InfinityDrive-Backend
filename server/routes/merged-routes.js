@@ -17,7 +17,8 @@ router
         account.files = files[i];
       });
       res.send(mergedAccounts);
-    } catch (error) {
+    }
+    catch (error) {
       console.log(error);
       return res.status(400).send(error);
     }
@@ -25,7 +26,7 @@ router
 
   .post('/upload', authenticate, async (req, res) => {
     try {
-      const busboy = new BusBoy({ headers: req.headers });
+      const busboy = new BusBoy({ headers: req.headers, highWaterMark: 16000 });
       const accounts = await req.user.getAccounts();
       const tokens = await req.user.getTokensForAccounts(accounts);
 
@@ -54,7 +55,8 @@ router
       });
 
       req.pipe(busboy);
-    } catch (error) {
+    }
+    catch (error) {
       res.status(400).send('Unable to split upload!');
       console.log(error);
     }

@@ -24,6 +24,7 @@
         "prefer-promise-reject-errors": "warn",
         "no-shadow": "warn", 
         "no-use-before-define": "warn",
-        "no-loop-func": "off"
+        "no-loop-func": "off",
+        "max-len": "warn"
     }
 }

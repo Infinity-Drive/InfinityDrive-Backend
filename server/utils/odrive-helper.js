@@ -104,7 +104,8 @@ const saveToken = async (req, user) => {
     const email = await getUserInfo(token.access_token);
     const accounts = await user.addAccount(token, 'odrive', email);
     return accounts;
-  } catch (e) {
+  }
+  catch (e) {
     throw e;
   }
 };

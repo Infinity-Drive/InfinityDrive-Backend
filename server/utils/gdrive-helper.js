@@ -95,7 +95,8 @@ const saveToken = async (req, user) => {
     const email = await getUserInfo(auth);
     const accounts = await user.addAccount(token, 'gdrive', email);
     return accounts;
-  } catch (e) {
+  }
+  catch (e) {
     throw e;
   }
 };

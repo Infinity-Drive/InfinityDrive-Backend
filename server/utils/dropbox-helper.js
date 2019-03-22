@@ -27,7 +27,8 @@ const saveToken = async (req, user) => {
     const userInfo = await getUserInfo(token);
     const accounts = await user.addAccount({ access_token: token }, 'dropbox', userInfo.email);
     return accounts;
-  } catch (e) {
+  }
+  catch (e) {
     console.log(e);
     throw e;
   }
