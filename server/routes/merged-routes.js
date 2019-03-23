@@ -1,5 +1,6 @@
 const BusBoy = require('busboy');
 const express = require('express');
+const { ObjectID } = require('mongoose').Types.ObjectId;
 
 const { authenticate } = require('../middleware/authenticate');
 const splitter = require('../utils/splitter');
@@ -23,6 +24,23 @@ router
     catch (error) {
       console.log(error);
       return res.status(400).send(error);
+    }
+  })
+
+  .get('/download/:fileId', authenticate, async (req, res) => {
+    const fileId = req.params.fileId;
+    if (!ObjectID.isValid(fileId)) {
+      return res.status(400).send('File ID not valid!');
+    }
+
+    try {
+      const splitDirectory = await req.user.getSplitDirectory();
+      const file = splitDirectory.getFile(fileId);
+      mergedHelper.download(file.parts, req, res);
+    }
+    catch (error) {
+      console.log(error);
+      res.status(400).send('Unable to download file');
     }
   })
 

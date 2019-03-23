@@ -230,6 +230,27 @@ const deleteItem = async (token, itemId) => {
   });
 };
 
+const getDownloadStream = async (token, itemId) => {
+  token = await verifyTokenValidity(token);
+
+  const response = await axios({
+    method: 'get',
+    url: `https://graph.microsoft.com/v1.0//me/drive/items/${itemId}/content`,
+    headers: { Authorization: `Bearer ${token.access_token}` },
+    responseType: 'stream',
+  }).catch((e) => {
+    console.log(e);
+    throw new Error('Error getting file from Microsoft Servers');
+  });
+
+  const readstream = await response.data;
+
+  if (readstream) {
+    return readstream;
+  }
+  throw new Error('Error downloading file');
+};
+
 module.exports = {
   getAuthorizationUrl,
   saveToken,
@@ -238,4 +259,5 @@ module.exports = {
   getStorageInfo,
   upload,
   deleteItem,
+  getDownloadStream,
 };

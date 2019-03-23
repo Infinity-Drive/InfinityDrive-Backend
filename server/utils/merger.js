@@ -1,4 +1,4 @@
-const merger = (readStreams, response) => new Promise((resolve, reject) => {
+const mergeFile = (readStreams, response) => new Promise((resolve, reject) => {
   const streamCount = readStreams.length;
   // need a separate index for current stream being read, for loop counter would always point
   // to last index since for loop runs completely at first, registering all the listeners
@@ -37,4 +37,4 @@ const merger = (readStreams, response) => new Promise((resolve, reject) => {
   readStreams[0].pipe(response, { end: false });
 });
 
-module.exports = { merger };
+module.exports = { mergeFile };

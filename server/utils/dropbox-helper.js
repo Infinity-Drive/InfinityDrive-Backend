@@ -87,6 +87,11 @@ const deleteItem = async (token, itemId) => {
   });
 };
 
+const getDownloadStream = (token, fileId) => dropboxStream.createDropboxDownloadStream({
+  token: token.access_token,
+  path: fileId,
+});
+
 module.exports = {
   getAuthorizationUrl,
   saveToken,
@@ -95,4 +100,5 @@ module.exports = {
   getStorageInfo,
   upload,
   deleteItem,
+  getDownloadStream,
 };

@@ -199,6 +199,20 @@ const deleteItem = async (token, itemId) => {
   });
 };
 
+const getDownloadStream = async (token, fileId) => {
+  auth.setCredentials(token);
+  const drive = google.drive({ version: 'v3', auth });
+
+  const stream = await drive.files.get({
+    fileId,
+    alt: 'media',
+  }, {
+    responseType: 'stream',
+  });
+
+  return stream.data;
+};
+
 module.exports = {
   getAuthorizationUrl,
   saveToken,
@@ -207,4 +221,5 @@ module.exports = {
   getStorageInfo,
   getDownloadUrl,
   deleteItem,
+  getDownloadStream,
 };

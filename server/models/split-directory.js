@@ -54,6 +54,17 @@ SplitDirectorySchema.methods.addFile = async function (name, size, parts, mimeTy
   return id;
 };
 
+SplitDirectorySchema.methods.getFile = function (fileId) {
+  const splitDirectory = this;
+
+  const file = splitDirectory.content.toObject().filter(file => file._id.toString() === fileId);
+
+  if (file) {
+    return file[0];
+  }
+  return new Error('File not found');
+};
+
 const SplitDirectory = mongoose.model('SplitDirectory', SplitDirectorySchema);
 
 module.exports = { SplitDirectory };
