@@ -5,7 +5,7 @@ mongoose.set('useCreateIndex', true);
 
 const SplitDirectorySchema = new mongoose.Schema({
 
-  fileName: {
+  name: {
     type: String,
     default: 'root',
   },
@@ -34,14 +34,14 @@ const SplitDirectorySchema = new mongoose.Schema({
 
 });
 
-SplitDirectorySchema.methods.addFile = async function (fileName, size, parts, mimeType) {
+SplitDirectorySchema.methods.addFile = async function (name, size, parts, mimeType) {
   const directory = this;
   const id = new mongoose.Types.ObjectId();
 
   directory.content.push(
     new SplitDirectory({
       _id: id,
-      fileName,
+      name,
       folder: false,
       size,
       mimeType,

@@ -225,6 +225,8 @@ UserSchema.methods.getSplitDirectory = async function () {
   }
 
   const newSplitDirectory = new SplitDirectory({});
+  user.splitDirectoryId = newSplitDirectory._id;
+  await user.save();
   return newSplitDirectory.save();
 };
 

@@ -16,6 +16,8 @@ router
       await accounts.forEach((account, i) => {
         account.files = files[i];
       });
+      const splitDirectory = await req.user.getSplitDirectory();
+      accounts.push({ accountType: 'merged', files: splitDirectory.content.toObject() });
       res.send(accounts);
     }
     catch (error) {
@@ -51,6 +53,7 @@ router
           modifiedTime: new Date().toISOString(),
           size: Number(req.headers['x-filesize']),
           accountType: 'merged',
+          account: 'Merged',
         });
       });
 
