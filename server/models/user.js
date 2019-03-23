@@ -121,43 +121,6 @@ UserSchema.methods.addAccount = function (token, accountType, email) {
   });
 };
 
-UserSchema.methods.getAccounts = function () {
-  const user = this;
-
-  return new Promise((resolve, reject) => {
-    // omit the account token for security
-
-    if (user.accounts.length !== 0) {
-      const accounts = _.map(user.accounts, account => _.omit(account.toObject(), ['token']));
-      return resolve(accounts);
-    }
-
-    reject('No account found!');
-  });
-};
-
-UserSchema.methods.getMergedAccounts = function () {
-  const user = this;
-
-  return new Promise((resolve, reject) => {
-    // omit the account token for security
-
-    if (user.accounts.length !== 0) {
-      // const mergedAccounts = _.filter(user.accounts.toObject(), account => account.merged);
-
-      const mergedAccounts = user.accounts.toObject();
-
-      if (mergedAccounts.length !== 0) {
-        return resolve(mergedAccounts);
-      }
-
-      reject('No merged accounts');
-    }
-
-    reject('No account found!');
-  });
-};
-
 // get token for multiple/single account(s)
 UserSchema.methods.getTokensForAccounts = function (accountIds) {
   const user = this;

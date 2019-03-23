@@ -10,13 +10,13 @@ const router = express.Router();
 router
   .get('/listFiles', authenticate, async (req, res) => {
     try {
-      const mergedAccounts = await req.user.getMergedAccounts();
-      const files = await mergedHelper.getFilesForAccount(mergedAccounts);
+      const accounts = req.user.accounts.toObject();
+      const files = await mergedHelper.getFilesForAccount(accounts);
 
-      await mergedAccounts.forEach((account, i) => {
+      await accounts.forEach((account, i) => {
         account.files = files[i];
       });
-      res.send(mergedAccounts);
+      res.send(accounts);
     }
     catch (error) {
       console.log(error);
@@ -27,7 +27,7 @@ router
   .post('/upload', authenticate, async (req, res) => {
     try {
       const busboy = new BusBoy({ headers: req.headers, highWaterMark: 16000 });
-      const accounts = await req.user.getAccounts();
+      const accounts = req.user.accounts.toObject();
       const tokens = await req.user.getTokensForAccounts(accounts);
 
       busboy.on('file', async (fieldname, file, name, encoding, mimeType) => {
