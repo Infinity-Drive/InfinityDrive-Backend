@@ -71,7 +71,7 @@ const upload = async (token, filename, readableStream, path = '/') => new Promis
       console.log(err);
       reject('Unable to upload file to dropbox');
     })
-    .on('progress', res => console.log(`${res} uploaded`))
+    .on('progress', res => console.log(`${res} uploaded dropbox`))
     .on('metadata', (metadata) => {
       resolve(metadata.id);
     });

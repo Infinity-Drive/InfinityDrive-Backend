@@ -161,7 +161,6 @@ const getStorageInfo = async (token) => {
 
 const upload = (token, filename, readStream, size) => new Promise(async (resolve, reject) => {
   console.log(`---- Uploading ${filename} to Onedrive ----`);
-  console.log('ONEDRIVE SIZE OF FILE', size);
   let uploadedBytes = 0;
   let chunksToUpload = [];
   let chunksToUploadSize = 0;

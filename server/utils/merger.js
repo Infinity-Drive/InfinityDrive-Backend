@@ -1,7 +1,7 @@
 const merger = (readStreams, response) => new Promise((resolve, reject) => {
   const streamCount = readStreams.length;
   // need a separate index for current stream being read, for loop counter would always point
-  // to last indexsince for loop runs completely at first, registering all the listeners
+  // to last index since for loop runs completely at first, registering all the listeners
   let currentStreamIndex = 0;
 
   // iterate over all streams to register end listeners
@@ -13,11 +13,13 @@ const merger = (readStreams, response) => new Promise((resolve, reject) => {
       stream.on('end', () => {
         readStreams[currentStreamIndex].unpipe(response);
         currentStreamIndex += 1;
-        // check if readStream isn't the second last stream
-        if (currentStreamIndex !== streamCount - 2) {
+        // check if next readStream is the last stream
+        if (currentStreamIndex !== streamCount - 1) {
+          console.log(`piping stream ${currentStreamIndex}`);
           readStreams[currentStreamIndex].pipe(response, { end: false });
         }
         else {
+          console.log(`piping last stream ${currentStreamIndex}`);
           readStreams[currentStreamIndex].pipe(response);
         }
       });
@@ -31,6 +33,7 @@ const merger = (readStreams, response) => new Promise((resolve, reject) => {
   }
 
   // start piping from first read stream
+  console.log(`piping stream ${currentStreamIndex}`);
   readStreams[0].pipe(response, { end: false });
 });
 
