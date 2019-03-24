@@ -11,19 +11,12 @@ const router = express.Router();
 router
   .get('/listFiles', authenticate, async (req, res) => {
     try {
-      const accounts = req.user.accounts.toObject();
-      const files = await mergedHelper.getFilesForAccount(accounts);
-
-      await accounts.forEach((account, i) => {
-        account.files = files[i];
-      });
-      const splitDirectory = await req.user.getSplitDirectory();
-      accounts.push({ accountType: 'merged', files: splitDirectory.content.toObject() });
+      let accounts = req.user.accounts.toObject();
+      accounts = await mergedHelper.getFilesForAccount(accounts, req.user);
       res.send(accounts);
     }
     catch (error) {
-      console.log(error);
-      return res.status(400).send(error);
+      return res.status(400).send(error.message);
     }
   })
 

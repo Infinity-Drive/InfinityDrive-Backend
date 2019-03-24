@@ -4,49 +4,65 @@ const dropboxHelper = require('./dropbox-helper.js');
 const gdriveHelper = require('./gdrive-helper');
 const merger = require('./merger');
 
-const getFilesForAccount = (accounts) => {
-  const files = [];
+const getFilesForAccount = async (accounts, user) => {
+  const filePromises = [];
 
   accounts.forEach((account, i) => {
     if (account.accountType === 'gdrive') {
-      files[i] = gdriveHelper.getFilesForAccount(account.token);
+      filePromises[i] = gdriveHelper.getFilesForAccount(account.token);
     }
 
     if (account.accountType === 'odrive') {
-      files[i] = odriveHelper.getFilesForAccount(account.token);
+      filePromises[i] = odriveHelper.getFilesForAccount(account.token);
     }
 
     if (account.accountType === 'dropbox') {
-      files[i] = dropboxHelper.getFilesForAccount(account.token);
+      filePromises[i] = dropboxHelper.getFilesForAccount(account.token);
     }
 
     delete account.token;
   });
 
-  return Promise.all(files);
+  // wait for all requests to return
+  const files = await Promise.all(filePromises).catch((e) => {
+    throw new Error('Unable to get files for one or more accounts');
+  });
+  // attach files with each respective account
+  accounts.forEach((account, i) => {
+    account.files = files[i];
+  });
+
+  // get split files
+  const splitDirectory = await user.getSplitDirectory();
+  accounts.push({ accountType: 'merged', files: splitDirectory.content.toObject() });
+
+  return accounts;
 };
 
 const download = async (parts, req, response) => {
   const streams = [];
 
-  // eslint-disable-next-line no-restricted-syntax
-  for (const part of parts) {
-    // eslint-disable-next-line no-await-in-loop
-    const token = await req.user.getTokensForAccounts([part.accountId]);
+  try {
+    const accountIds = parts.map(part => part.accountId);
+    const token = await req.user.getTokensForAccounts(accountIds);
 
-    if (part.accountType === 'gdrive') {
-      // eslint-disable-next-line no-await-in-loop
-      streams.push(await gdriveHelper.getDownloadStream(token, part.partId));
-    }
-    if (part.accountType === 'odrive') {
-      streams.push(await odriveHelper.getDownloadStream(token, part.partId));
-    }
-    if (part.accountType === 'dropbox') {
-      streams.push(dropboxHelper.getDownloadStream(token, part.partId));
-    }
+    parts.forEach((part, i) => {
+      if (part.accountType === 'gdrive') {
+        streams.push(gdriveHelper.getDownloadStream(token[i], part.partId));
+      }
+      if (part.accountType === 'odrive') {
+        streams.push(odriveHelper.getDownloadStream(token[i], part.partId));
+      }
+      if (part.accountType === 'dropbox') {
+        streams.push(dropboxHelper.getDownloadStream(token[i], part.partId));
+      }
+    });
+
+    merger.mergeFile(await Promise.all(streams), fs.createWriteStream('./test.mp3'));
   }
-
-  merger.mergeFile(streams, fs.createWriteStream('./test.jpg'));
+  catch (error) {
+    throw error;
+  }
 };
 
 module.exports = { getFilesForAccount, download };

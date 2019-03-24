@@ -120,9 +120,16 @@ const getStorageInfo = async (token) => {
 
 const getFilesForAccount = async (token, folderId = 'root') => {
   // token = await verifyTokenValidity(token);
-  auth.setCredentials(token);
+  try {
+    auth.setCredentials(token);
+  }
+  catch (error) {
+    console.log(error);
+    throw new Error('Error authenticating with Google Drive');
+  }
 
-  const drive = google.drive({ version: 'v3', auth }); // need to specify auth as auth: auth or auth: any_other_name
+  // need to specify auth as auth: auth or auth: any_other_name
+  const drive = google.drive({ version: 'v3', auth });
 
   const res = await drive.files.list({
     q: `'me' in owners and '${folderId}' in parents and trashed = false`,
