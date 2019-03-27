@@ -39,26 +39,28 @@ const getFilesForAccount = async (accounts, user) => {
   return accounts;
 };
 
-const download = async (parts, req, response) => {
+const download = async (parts, user, response) => {
   const streams = [];
 
   try {
+    // get account id for each account that holds a part
     const accountIds = parts.map(part => part.accountId);
-    const token = await req.user.getTokensForAccounts(accountIds);
+    // get tokens for each account that holds a part
+    const tokens = await user.getTokensForAccounts(accountIds);
 
     parts.forEach((part, i) => {
       if (part.accountType === 'gdrive') {
-        streams.push(gdriveHelper.getDownloadStream(token[i], part.partId));
+        streams.push(gdriveHelper.getDownloadStream(tokens[i], part.partId));
       }
       if (part.accountType === 'odrive') {
-        streams.push(odriveHelper.getDownloadStream(token[i], part.partId));
+        streams.push(odriveHelper.getDownloadStream(tokens[i], part.partId));
       }
       if (part.accountType === 'dropbox') {
-        streams.push(dropboxHelper.getDownloadStream(token[i], part.partId));
+        streams.push(dropboxHelper.getDownloadStream(tokens[i], part.partId));
       }
     });
 
-    merger.mergeFile(await Promise.all(streams), fs.createWriteStream('./test.mp3'));
+    merger.mergeFile(await Promise.all(streams), response);
   }
   catch (error) {
     throw error;

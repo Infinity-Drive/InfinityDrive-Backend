@@ -188,7 +188,7 @@ const upload = (token, filename, readStream, size) => new Promise(async (resolve
     chunksToUploadSize += chunk.length;
 
     // upload only if we've 20 chunks in memory OR we're uploading the final chunk
-    if (chunksToUpload.length === 20 || chunksToUploadSize + uploadedBytes === size) {
+    if (chunksToUpload.length === 170 || chunksToUploadSize + uploadedBytes === size) {
       readStream.pause();
       // make buffer from the chunks
       const data = Buffer.concat(chunksToUpload, chunksToUploadSize);

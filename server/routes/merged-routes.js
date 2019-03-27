@@ -29,7 +29,7 @@ router
     try {
       const splitDirectory = await req.user.getSplitDirectory();
       const file = splitDirectory.getFile(fileId);
-      mergedHelper.download(file.parts, req, res);
+      mergedHelper.download(file.parts, req.user, res);
     }
     catch (error) {
       console.log(error);
