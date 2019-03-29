@@ -31,6 +31,7 @@
     "jsonwebtoken": "^8.4.0",
     "lodash": "^4.17.11",
     "mongoose": "^5.3.14",
+    "nodemailer": "^6.0.0",
     "onedrive-api": "^0.2.1",
     "querystring": "^0.2.0",
     "validator": "^10.9.0"

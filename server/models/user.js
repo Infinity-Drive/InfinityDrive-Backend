@@ -38,7 +38,10 @@ const UserSchema = new mongoose.Schema({
     required: true,
     minlength: 6,
   },
-
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
   tokens: [{
     access: {
       type: String,
@@ -96,6 +99,29 @@ UserSchema.methods.generateAuthToken = function () {
 
   return user.save().then(() => token);
 };
+
+
+UserSchema.methods.generateVerificationToken = function () {
+  // this method run for a given user object.
+  // that is, we run after the doc has been inserted into the db
+  const user = this; // we didnt use a cb function since we want to use 'this'
+  const access = 'verification';
+  const token = jwt.sign({ _id: user._id.toHexString(), access }, 'my secret').toString();
+
+  // user.tokens.concat([{access, token}]); //concat into the tokens array
+  user.tokens.push({ access, token });
+
+  return user.save().then(() => token);
+};
+
+UserSchema.methods.verifyEmail = function (token) {
+  // this method run for a given user object.
+  const user = this; // we didnt use a cb function since we want to use 'this'
+  user.isVerified = true;
+  //user.tokens.pull({token});
+  return user.save().then(() => token);
+};
+
 
 UserSchema.methods.addAccount = function (token, accountType, email) {
   return new Promise((resolve, reject) => {
@@ -249,11 +275,29 @@ UserSchema.statics.findByToken = function (token) {
   }); // since we're returning this, the promise can be caught in server.js
 };
 
+// define Model method (not an instance method like generateAuthToken), i.e. static method
+UserSchema.statics.findByVerificationToken = function (token) {
+  const User = this;
+  let decoded;
+
+  try {
+    decoded = jwt.verify(token, 'my secret');
+  }
+  catch (e) {
+    return Promise.reject();
+  }
+
+  return User.findOne({ // find user against the given token
+    _id: decoded._id,
+    'tokens.token': token, // quotes are required when we have a . in the value
+    'tokens.access': 'verification',
+  }); // since we're returning this, the promise can be caught in server.js
+};
 
 UserSchema.statics.findByCredentials = function (email, password) {
   const User = this;
 
-  return User.findOne({ email }).then((user) => {
+  return User.findOne({ email:email , isVerified: true}).then((user) => {
     if (!user) {
       return Promise.reject();
     }
