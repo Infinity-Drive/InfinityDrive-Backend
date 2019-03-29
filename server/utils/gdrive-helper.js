@@ -220,6 +220,20 @@ const getDownloadStream = async (token, fileId) => {
   return stream.data;
 };
 
+const getProperties = async (token, fileId) => {
+  // token = await verifyTokenValidity(token);
+  auth.setCredentials(token);
+  const drive = google.drive({ version: 'v3', auth });
+  const propertiesResponse = await drive.files.get({
+    fileId,
+    fields: '*',
+  }).catch((e) => {
+    console.log(e);
+    throw new Error('Unable to get file from Google');
+  });
+  return propertiesResponse.data;
+};
+
 module.exports = {
   getAuthorizationUrl,
   saveToken,
@@ -229,4 +243,5 @@ module.exports = {
   getDownloadUrl,
   deleteItem,
   getDownloadStream,
+  getProperties,
 };

@@ -11,13 +11,12 @@ const dbx = new Dropbox({
 
 const getAuthorizationUrl = () => dbx.getAuthenticationUrl(dropboxCreds.redirectUri, null, 'code');
 
-const getUserInfo = async (token) => {
+const getUserInfo = (token) => {
   const dbx = new Dropbox({ accessToken: token, fetch });
-  const info = await dbx.usersGetCurrentAccount().catch((e) => {
+  return dbx.usersGetCurrentAccount().catch((e) => {
     console.log(e);
     throw new Error('Error getting user info from Dropbox');
   });
-  return info;
 };
 
 const saveToken = async (req, user) => {
@@ -25,8 +24,7 @@ const saveToken = async (req, user) => {
     const code = req.body.code;
     const token = await dbx.getAccessTokenFromCode(dropboxCreds.redirectUri, code);
     const userInfo = await getUserInfo(token);
-    const accounts = await user.addAccount({ access_token: token }, 'dropbox', userInfo.email);
-    return accounts;
+    return user.addAccount({ access_token: token }, 'dropbox', userInfo.email);
   }
   catch (e) {
     console.log(e);
@@ -81,7 +79,7 @@ const upload = async (token, filename, readableStream, path = '/') => new Promis
 
 const deleteItem = async (token, itemId) => {
   const dbx = new Dropbox({ accessToken: token.access_token, fetch });
-  await dbx.filesDelete({ path: itemId }).catch((e) => {
+  return dbx.filesDelete({ path: itemId }).catch((e) => {
     console.log(e);
     throw new Error('Unable to delete file from Dropbox');
   });
@@ -92,6 +90,11 @@ const getDownloadStream = (token, fileId) => dropboxStream.createDropboxDownload
   path: fileId,
 });
 
+const getProperties = async (token, itemId) => {
+  const dbx = new Dropbox({ accessToken: token.access_token, fetch });
+  return dbx.filesGetMetadata({ path: itemId });
+};
+
 module.exports = {
   getAuthorizationUrl,
   saveToken,
@@ -101,4 +104,5 @@ module.exports = {
   upload,
   deleteItem,
   getDownloadStream,
+  getProperties,
 };

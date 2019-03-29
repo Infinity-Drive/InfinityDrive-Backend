@@ -26,7 +26,7 @@ router
   .get('/listFiles/:accountId/:folderId*?', authenticate, async (req, res) => {
     const accountId = req.params.accountId;
     if (!ObjectID.isValid(accountId)) {
-      return res.status(400).send('Account ID not valid!');
+      return res.status(400).send(new Error('Account ID not valid!'));
     }
 
     const folderId = req.params.folderId;
@@ -43,7 +43,7 @@ router
   .get('/downloadUrl/:accountId/:fileId', authenticate, async (req, res) => {
     const accountId = req.params.accountId;
     if (!ObjectID.isValid(accountId)) {
-      return res.status(400).send('Account ID not valid!');
+      return res.status(400).send(new Error('Account ID not valid!'));
     }
 
     try {
@@ -59,7 +59,7 @@ router
   .get('/storageInfo/:accountId', authenticate, async (req, res) => {
     const accountId = req.params.accountId;
     if (!ObjectID.isValid(accountId)) {
-      return res.status(400).send('Account ID not valid!');
+      return res.status(400).send(new Error('Account ID not valid!'));
     }
 
     try {
@@ -76,13 +76,13 @@ router
     try {
       const accountId = req.params.accountId;
       if (!ObjectID.isValid(accountId)) {
-        return res.status(400).send('Account ID not valid!');
+        return res.status(400).send(new Error('Account ID not valid!'));
       }
 
       const busboy = new BusBoy({ headers: req.headers });
 
       if (!ObjectID.isValid(accountId)) {
-        return res.status(400).send('Account ID not valid!');
+        return res.status(400).send(new Error('Account ID not valid!'));
       }
 
       const token = await req.user.getTokensForAccounts([accountId]);
@@ -103,7 +103,7 @@ router
   .delete('/delete/:accountId/:itemId', authenticate, async (req, res) => {
     const accountId = req.params.accountId;
     if (!ObjectID.isValid(accountId)) {
-      return res.status(400).send('Account ID not valid!');
+      return res.status(400).send(new Error('Account ID not valid!'));
     }
 
     try {
@@ -113,6 +113,22 @@ router
     }
     catch (error) {
       return res.status(400).send(error);
+    }
+  })
+
+  .get('/properties/:accountId/:itemId', authenticate, async (req, res) => {
+    const accountId = req.params.accountId;
+    if (!ObjectID.isValid(accountId)) {
+      return res.status(400).send(new Error('Account ID not valid!'));
+    }
+
+    try {
+      const token = await req.user.getTokensForAccounts([accountId]);
+      const properties = await dropboxHelper.getProperties(token, req.params.itemId);
+      res.send(properties);
+    }
+    catch (error) {
+      return res.status(400).send(new Error('Unable to get item info from Dropbox'));
     }
   });
 

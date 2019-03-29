@@ -251,6 +251,19 @@ const getDownloadStream = async (token, itemId) => {
   throw new Error('Error downloading file');
 };
 
+const getProperties = async (token, itemId) => {
+  token = await verifyTokenValidity(token);
+
+  return oneDriveAPI.items.getMetadata({
+    accessToken: token.access_token,
+    itemId,
+  }).catch((e) => {
+    console.log(e);
+    throw new Error('Unable to get item info from OneDrive');
+  });
+};
+
+
 module.exports = {
   getAuthorizationUrl,
   saveToken,
@@ -260,4 +273,5 @@ module.exports = {
   upload,
   deleteItem,
   getDownloadStream,
+  getProperties,
 };

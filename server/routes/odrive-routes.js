@@ -115,6 +115,22 @@ router
     catch (error) {
       return res.status(400).send(error);
     }
+  })
+
+  .get('/properties/:accountId/:itemId', authenticate, async (req, res) => {
+    const accountId = req.params.accountId;
+    if (!ObjectID.isValid(accountId)) {
+      return res.status(400).send('Account ID not valid!');
+    }
+
+    try {
+      const token = await req.user.getTokensForAccounts([accountId]);
+      const properties = await odriveHelper.getProperties(token, req.params.itemId);
+      res.send(properties);
+    }
+    catch (error) {
+      return res.status(400).send(error);
+    }
   });
 
 module.exports = router;
