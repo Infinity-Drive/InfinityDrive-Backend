@@ -21,4 +21,9 @@ module.exports = {
     redirectUri: 'http://localhost:4200/Dashboard/Accounts',
   },
 
+  emailCredentials:{
+    user: "infinitydrive97@gmail.com",
+    pass: "infinity97drive"
+}
+
 };

@@ -7,6 +7,7 @@ const { User } = require('../models/user');
 const { SplitDirectory } = require('../models/split-directory');
 const { authenticate } = require('../middleware/authenticate');
 const { getAccountsStorage } = require('../utils/utils');
+const { emailCredentials } = require('../config/config')
 
 const router = express.Router();
 
@@ -17,10 +18,7 @@ const router = express.Router();
 */
 var smtpTransport = nodemailer.createTransport({
   service: "Gmail",
-  auth: {
-      user: "infinitydrive97@gmail.com",
-      pass: ""
-  }
+  auth: emailCredentials
 });
 /*------------------SMTP Over-----------------------------*/
 
