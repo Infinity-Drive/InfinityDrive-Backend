@@ -1,4 +1,3 @@
-const fs = require('fs');
 const odriveHelper = require('./odrive-helper.js');
 const dropboxHelper = require('./dropbox-helper.js');
 const gdriveHelper = require('./gdrive-helper');
@@ -40,7 +39,7 @@ const getFilesForAccount = async (accounts, user) => {
 };
 
 const download = async (parts, user, response) => {
-  const streams = [];
+  const streamPromises = [];
 
   try {
     // get account id for each account that holds a part
@@ -50,21 +49,49 @@ const download = async (parts, user, response) => {
 
     parts.forEach((part, i) => {
       if (part.accountType === 'gdrive') {
-        streams.push(gdriveHelper.getDownloadStream(tokens[i], part.partId));
+        streamPromises.push(gdriveHelper.getDownloadStream(tokens[i], part.partId));
       }
       if (part.accountType === 'odrive') {
-        streams.push(odriveHelper.getDownloadStream(tokens[i], part.partId));
+        streamPromises.push(odriveHelper.getDownloadStream(tokens[i], part.partId));
       }
       if (part.accountType === 'dropbox') {
-        streams.push(dropboxHelper.getDownloadStream(tokens[i], part.partId));
+        streamPromises.push(dropboxHelper.getDownloadStream(tokens[i], part.partId));
       }
     });
-
-    merger.mergeFile(await Promise.all(streams), response);
+    const streams = await Promise.all(streamPromises);
+    merger.mergeFile(streams, response);
   }
   catch (error) {
     throw error;
   }
 };
 
-module.exports = { getFilesForAccount, download };
+const deleteParts = async (parts, user) => {
+  const deletionPromises = [];
+
+  try {
+    // get account id for each account that holds a part
+    const accountIds = parts.map(part => part.accountId);
+    // get tokens for each account that holds a part
+    const tokens = await user.getTokensForAccounts(accountIds);
+
+    parts.forEach((part, i) => {
+      if (part.accountType === 'gdrive') {
+        deletionPromises.push(gdriveHelper.deleteItem(tokens[i], part.partId));
+      }
+      if (part.accountType === 'odrive') {
+        deletionPromises.push(odriveHelper.deleteItem(tokens[i], part.partId));
+      }
+      if (part.accountType === 'dropbox') {
+        deletionPromises.push(dropboxHelper.deleteItem(tokens[i], part.partId));
+      }
+    });
+
+    return Promise.all(deletionPromises);
+  }
+  catch (error) {
+    throw error;
+  }
+};
+
+module.exports = { getFilesForAccount, download, deleteParts };

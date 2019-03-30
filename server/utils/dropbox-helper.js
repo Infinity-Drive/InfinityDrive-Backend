@@ -77,7 +77,7 @@ const upload = async (token, filename, readableStream, path = '/') => new Promis
   readableStream.pipe(up);
 });
 
-const deleteItem = async (token, itemId) => {
+const deleteItem = (token, itemId) => {
   const dbx = new Dropbox({ accessToken: token.access_token, fetch });
   return dbx.filesDelete({ path: itemId }).catch((e) => {
     console.log(e);

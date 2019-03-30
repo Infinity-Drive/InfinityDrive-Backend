@@ -194,11 +194,11 @@ const getDownloadUrl = async (token, fileId) => {
   return `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&access_token=${token.access_token}`;
 };
 
-const deleteItem = async (token, itemId) => {
+const deleteItem = (token, itemId) => {
   // token = await verifyTokenValidity(token);
   auth.setCredentials(token);
   const drive = google.drive({ version: 'v3', auth });
-  await drive.files.delete({
+  return drive.files.delete({
     fileId: itemId,
   }).catch((e) => {
     console.log(e);

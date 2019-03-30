@@ -65,6 +65,18 @@ SplitDirectorySchema.methods.getFile = function (fileId) {
   return new Error('File not found');
 };
 
+SplitDirectorySchema.methods.removeFile = function (fileId) {
+  const splitDirectory = this;
+
+  return splitDirectory.updateOne({
+    $pull: {
+      content: {
+        _id: mongoose.Types.ObjectId(fileId),
+      },
+    },
+  });
+};
+
 const SplitDirectory = mongoose.model('SplitDirectory', SplitDirectorySchema);
 
 module.exports = { SplitDirectory };

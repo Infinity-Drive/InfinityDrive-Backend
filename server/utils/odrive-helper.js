@@ -221,7 +221,7 @@ const upload = (token, filename, readStream, size) => new Promise(async (resolve
 const deleteItem = async (token, itemId) => {
   token = await verifyTokenValidity(token);
 
-  await oneDriveAPI.items.delete({
+  return oneDriveAPI.items.delete({
     accessToken: token.access_token,
     itemId,
   }).catch((e) => {

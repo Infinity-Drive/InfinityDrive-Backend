@@ -32,7 +32,7 @@ router
       mergedHelper.download(file.parts, req.user, res);
     }
     catch (error) {
-      console.log(error);
+      // console.log(error);
       res.status(400).send('Unable to download file');
     }
   })
@@ -73,6 +73,25 @@ router
     catch (error) {
       res.status(400).send('Unable to split upload!');
       console.log(error);
+    }
+  })
+
+  .delete('/delete/:fileId', authenticate, async (req, res) => {
+    const fileId = req.params.fileId;
+    if (!ObjectID.isValid(fileId)) {
+      return res.status(400).send('File ID not valid!');
+    }
+
+    try {
+      const splitDirectory = await req.user.getSplitDirectory();
+      const file = splitDirectory.getFile(fileId);
+      await mergedHelper.deleteParts(file.parts, req.user);
+      await splitDirectory.removeFile(fileId);
+      res.send('Item deleted');
+    }
+    catch (error) {
+      console.log(error);
+      res.status(400).send('Unable to delete file');
     }
   });
 
