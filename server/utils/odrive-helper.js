@@ -159,64 +159,17 @@ const getStorageInfo = async (token) => {
   return { total: info.data.quota.total.toString(), used: info.data.quota.used.toString() };
 };
 
-const upload = (token, filename, readStream, size) => new Promise(async (resolve, reject) => {
-  console.log(`---- Uploading ${filename} to Onedrive ----`);
-  let uploadedBytes = 0;
-  let chunksToUpload = [];
-  let chunksToUploadSize = 0;
-
+const upload = async (token, filename, readableStream, fileSize) => {
   token = await verifyTokenValidity(token);
-  // get session link
-  const response = await axios({
-    method: 'POST',
-    url: `https://graph.microsoft.com/v1.0/me/drive/root:/${filename}:/createUploadSession`,
-    body: {
-      '@microsoft.graph.conflictBehavior': 'rename',
-      fileSystemInfo: { '@odata.type': 'microsoft.graph.fileSystemInfo' },
-      name: filename,
-    },
-    headers: {
-      Authorization: `Bearer ${token.access_token}`,
-      'Content-Type': 'aplication/json',
-    },
-  }).catch(e => reject(e));
-
-  const url = response.data.uploadUrl;
-
-  readStream.on('data', async (chunk) => {
-    chunksToUpload.push(chunk);
-    chunksToUploadSize += chunk.length;
-
-    // upload only if we've 20 chunks in memory OR we're uploading the final chunk
-    if (chunksToUpload.length === 170 || chunksToUploadSize + uploadedBytes === size) {
-      readStream.pause();
-      // make buffer from the chunks
-      const data = Buffer.concat(chunksToUpload, chunksToUploadSize);
-
-      const response = await axios({
-        method: 'PUT',
-        url,
-        headers: {
-          'Content-Length': chunksToUploadSize,
-          'Content-Range': `bytes ${uploadedBytes}-${(uploadedBytes + chunksToUploadSize) - 1}/${size}`,
-        },
-        data,
-      }).catch(e => reject(e));
-
-      // reset for next chunks
-      uploadedBytes += chunksToUploadSize;
-      chunksToUpload = [];
-      chunksToUploadSize = 0;
-
-      console.log(`${uploadedBytes} uploaded odrive`);
-
-      if (response.status === 201 || response.status === 203 || response.status === 200) {
-        resolve(response.data.id);
-      }
-      readStream.resume();
-    }
+  console.log(`---- Uploading ${filename} to Onedrive ----`);
+  return oneDriveAPI.items.uploadSession({
+    accessToken: token.access_token,
+    filename,
+    fileSize,
+    readableStream,
+    chunksToUpload: 170,
   });
-});
+};
 
 const deleteItem = async (token, itemId) => {
   token = await verifyTokenValidity(token);

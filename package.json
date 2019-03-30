@@ -32,7 +32,7 @@
     "lodash": "^4.17.11",
     "mongoose": "^5.3.14",
     "nodemailer": "^6.0.0",
-    "onedrive-api": "^0.2.1",
+    "onedrive-api": "^0.3.0",
     "querystring": "^0.2.0",
     "validator": "^10.9.0"
   },
