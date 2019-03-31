@@ -40,7 +40,7 @@ const UserSchema = new mongoose.Schema({
   },
   isVerified: {
     type: Boolean,
-    default: false
+    default: false,
   },
   tokens: [{
     access: {
@@ -118,7 +118,7 @@ UserSchema.methods.verifyEmail = function (token) {
   // this method run for a given user object.
   const user = this; // we didnt use a cb function since we want to use 'this'
   user.isVerified = true;
-  //user.tokens.pull({token});
+  // user.tokens.pull({token});
   return user.save().then(() => token);
 };
 
@@ -297,7 +297,7 @@ UserSchema.statics.findByVerificationToken = function (token) {
 UserSchema.statics.findByCredentials = function (email, password) {
   const User = this;
 
-  return User.findOne({ email:email , isVerified: true}).then((user) => {
+  return User.findOne({ email, isVerified: true }).then((user) => {
     if (!user) {
       return Promise.reject();
     }

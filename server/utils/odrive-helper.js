@@ -162,13 +162,16 @@ const getStorageInfo = async (token) => {
 const upload = async (token, filename, readableStream, fileSize) => {
   token = await verifyTokenValidity(token);
   console.log(`---- Uploading ${filename} to Onedrive ----`);
-  return oneDriveAPI.items.uploadSession({
+  const file = await oneDriveAPI.items.uploadSession({
     accessToken: token.access_token,
     filename,
     fileSize,
     readableStream,
     chunksToUpload: 170,
+  }).catch((e) => {
+    throw new Error('Error downloading file from OneDrive');
   });
+  return file.id;
 };
 
 const deleteItem = async (token, itemId) => {

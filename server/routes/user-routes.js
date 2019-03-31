@@ -1,27 +1,25 @@
 const _ = require('lodash');
 const ObjectID = require('mongoose').Types.ObjectId;
 const express = require('express');
-var nodemailer = require("nodemailer");
+const nodemailer = require('nodemailer');
 
 const { User } = require('../models/user');
 const { SplitDirectory } = require('../models/split-directory');
 const { authenticate } = require('../middleware/authenticate');
 const { getAccountsStorage } = require('../utils/utils');
-const { emailCredentials } = require('../config/config')
+const { emailCredentials } = require('../config/config');
 
 const router = express.Router();
-
 
 /*
     Here we are configuring our SMTP Server details.
     STMP is mail server which is responsible for sending and recieving email.
 */
-var smtpTransport = nodemailer.createTransport({
-  service: "Gmail",
-  auth: emailCredentials
+const smtpTransport = nodemailer.createTransport({
+  service: 'Gmail',
+  auth: emailCredentials,
 });
-/*------------------SMTP Over-----------------------------*/
-
+/* ------------------SMTP Over-----------------------------*/
 
 router
 
@@ -34,24 +32,24 @@ router
     newUser.splitDirectoryId = splitDirectory.id;
 
     newUser.save().then(() => newUser.generateVerificationToken()).then((token) => {
-
       // rand = Math.floor((Math.random() * 100) + 54);
       // host = req.get('host');
       // link = "http://" + req.get('host') + "/verify?id=" + rand;
-      mailOptions = {
+      const mailOptions = {
         to: body.email,
-        subject: "Please confirm your Email account",
-        html: "Hello,<br> Please Click on the link to verify your email.<br><a href=http://localhost:4200/EmailVerification/"+token+">Click here to verify</a>"
-      }
-      //console.log(mailOptions);
-      smtpTransport.sendMail(mailOptions, function (error, response) {
+        subject: 'Please confirm your Email account',
+        html: `Hello,<br> Please Click on the link to verify your email.<br><a href=http://localhost:4200/EmailVerification/${token}>Click here to verify</a>`,
+      };
+      // console.log(mailOptions);
+      smtpTransport.sendMail(mailOptions, (error, response) => {
         if (error) {
           console.log(error);
           res.status(400).send(error);
-        } else {
-          console.log("Message sent");
+        }
+        else {
+          console.log('Message sent');
           res.header('x-auth', token).send(newUser);
-          res.end("sent");
+          res.end('sent');
         }
       });
     }).catch((err) => {
@@ -73,18 +71,18 @@ router
 
   .post('/verifyEmail', async (req, res) => {
     try {
-      token=req.body.token
-      //console.log(token)
+      const token = req.body.token;
+      // console.log(token)
       User.findByVerificationToken(token).then((user) => {
         // valid token but user not found
         if (!user) {
           return Promise.reject();
         }
-        //console.log(user)
+        // console.log(user)
         user.verifyEmail(token);
-        res.send("Verified")
+        res.send('Verified');
       }).catch((e) => {
-        console.log(e)
+        console.log(e);
         res.status(401).send('Not authorized');
       });
     }
