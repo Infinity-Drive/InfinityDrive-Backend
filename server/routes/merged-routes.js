@@ -5,6 +5,7 @@ const { ObjectID } = require('mongoose').Types.ObjectId;
 const { authenticate } = require('../middleware/authenticate');
 const splitter = require('../utils/splitter');
 const mergedHelper = require('../utils/merged-helper');
+const merger = require('../utils/merger');
 
 const router = express.Router();
 
@@ -29,7 +30,7 @@ router
     try {
       const splitDirectory = await req.user.getSplitDirectory();
       const file = splitDirectory.getFile(fileId);
-      mergedHelper.download(file.parts, req.user, res);
+      merger.mergeFile(file.parts, req.user, res);
     }
     catch (error) {
       // console.log(error);

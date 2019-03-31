@@ -85,10 +85,19 @@ const deleteItem = (token, itemId) => {
   });
 };
 
-const getDownloadStream = (token, fileId) => dropboxStream.createDropboxDownloadStream({
-  token: token.access_token,
-  path: fileId,
-});
+const getDownloadStream = (token, fileId) => {
+  const stream = dropboxStream.createDropboxDownloadStream({
+    token: token.access_token,
+    path: fileId,
+  })
+    .on('error', (err) => {
+      console.log(err);
+      throw new Error('Unable to download file from Dropbox');
+    })
+    .on('progress', res => console.log(res));
+
+  return stream;
+};
 
 const getProperties = async (token, itemId) => {
   const dbx = new Dropbox({ accessToken: token.access_token, fetch });

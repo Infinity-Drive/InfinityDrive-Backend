@@ -215,6 +215,9 @@ const getDownloadStream = async (token, fileId) => {
     alt: 'media',
   }, {
     responseType: 'stream',
+  }).catch((e) => {
+    console.log(e);
+    throw new Error('Unable to download file from Google Drive');
   });
 
   return stream.data;
