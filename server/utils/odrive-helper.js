@@ -71,7 +71,7 @@ const getUserInfo = async (accessToken) => {
     headers: { Authorization: `Bearer ${accessToken}` },
   }).catch((e) => {
     console.log(e);
-    throw new Error('Error getting account info from Microsoft Servers');
+    throw new Error('Error getting account info from OneDrive');
   });
 
   return info.data.userPrincipalName;
@@ -80,30 +80,32 @@ const getUserInfo = async (accessToken) => {
 const saveToken = async (req, user) => {
   try {
     const code = req.body.code;
+    if (code) {
+      const response = await axios({
+        method: 'post',
+        url: 'https://login.live.com/oauth20_token.srf',
+        data: qs.stringify({
+          client_id: odriveCreds.clientID,
+          client_secret: odriveCreds.clientSecret,
+          grant_type: 'authorization_code',
+          redirect_uri: odriveCreds.redirectUrl,
+          code,
+        }),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      }).catch((e) => {
+        console.log(e);
+        throw new Error('Error getting token from OneDrive');
+      });
 
-    const response = await axios({
-      method: 'post',
-      url: 'https://login.live.com/oauth20_token.srf',
-      data: qs.stringify({
-        client_id: odriveCreds.clientID,
-        client_secret: odriveCreds.clientSecret,
-        grant_type: 'authorization_code',
-        redirect_uri: odriveCreds.redirectUrl,
-        code,
-      }),
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    }).catch((e) => {
-      console.log(e);
-      throw new Error('Error getting token from Microsoft Servers');
-    });
-
-    const token = await response.data;
-    // Graph API doesn't send the token expiry date so we
-    // add expires_in with current time to get the expiry date
-    token.expiry_date = new Date().getTime() + token.expires_in * 1000;
-    const email = await getUserInfo(token.access_token);
-    const accounts = await user.addAccount(token, 'odrive', email);
-    return accounts;
+      const token = await response.data;
+      // Graph API doesn't send the token expiry date so we
+      // add expires_in with current time to get the expiry date
+      token.expiry_date = new Date().getTime() + token.expires_in * 1000;
+      const email = await getUserInfo(token.access_token);
+      const accounts = await user.addAccount(token, 'odrive', email);
+      return accounts;
+    }
+    throw new Error('Unable to get code from request');
   }
   catch (e) {
     throw e;
@@ -118,7 +120,7 @@ const getFilesForAccount = async (token, folderId = 'root') => {
     headers: { Authorization: `Bearer ${token.access_token}` },
   }).catch((e) => {
     console.log(e);
-    throw new Error('Error getting files from Microsoft Servers');
+    throw new Error('Error getting files from OneDrive');
   });
 
   return files.data.value;
@@ -133,10 +135,10 @@ const getDownloadUrl = async (token, fileId) => {
     headers: { Authorization: `Bearer ${token.access_token}` },
   }).catch((e) => {
     console.log(e);
-    throw new Error('Error getting file from Microsoft Servers');
+    throw new Error('Error getting file from OneDrive');
   });
 
-  const url = await file.data['@microsoft.graph.downloadUrl'];
+  const url = file.data['@microsoft.graph.downloadUrl'];
 
   if (url) {
     return url;
@@ -153,7 +155,7 @@ const getStorageInfo = async (token) => {
     headers: { Authorization: `Bearer ${token.access_token}` },
   }).catch((e) => {
     console.log(e);
-    throw new Error('Error getting OneDrive info from Microsoft Servers');
+    throw new Error('Error getting storage info from OneDrive');
   });
 
   return { total: info.data.quota.total.toString(), used: info.data.quota.used.toString() };
@@ -169,7 +171,8 @@ const upload = async (token, filename, readableStream, fileSize) => {
     readableStream,
     chunksToUpload: 170,
   }).catch((e) => {
-    throw new Error('Error downloading file from OneDrive');
+    console.log(e);
+    throw new Error('Error uploading file to OneDrive');
   });
   return file.id;
 };
@@ -182,7 +185,7 @@ const deleteItem = async (token, itemId) => {
     itemId,
   }).catch((e) => {
     console.log(e);
-    throw new Error('Unable to delete item from OneDrive');
+    throw new Error('Error deleting file from OneDrive');
   });
 };
 
@@ -196,10 +199,10 @@ const getDownloadStream = async (token, itemId) => {
     responseType: 'stream',
   }).catch((e) => {
     console.log(e);
-    throw new Error('Error getting file from Microsoft Servers');
+    throw new Error('Error getting file from OneDrive');
   });
 
-  const readstream = await response.data;
+  const readstream = response.data;
 
   if (readstream) {
     return readstream;
@@ -215,7 +218,7 @@ const getProperties = async (token, itemId) => {
     itemId,
   }).catch((e) => {
     console.log(e);
-    throw new Error('Unable to get item info from OneDrive');
+    throw new Error('Error getting item info from OneDrive');
   });
 };
 

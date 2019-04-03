@@ -20,7 +20,7 @@ router
       res.send(accounts);
     }
     catch (error) {
-      return res.status(400).send(error);
+      res.status(400).send(error.message);
     }
   })
 
@@ -37,7 +37,7 @@ router
       res.send(files);
     }
     catch (error) {
-      return res.status(400).send(error);
+      res.status(400).send(error.message);
     }
   })
 
@@ -53,7 +53,7 @@ router
       res.send({ downloadUrl });
     }
     catch (error) {
-      return res.status(400).send(error);
+      res.status(400).send(error.message);
     }
   })
 
@@ -69,7 +69,7 @@ router
       res.send(storageInfo);
     }
     catch (error) {
-      return res.status(400).send(error);
+      res.status(400).send(error.message);
     }
   })
 
@@ -81,23 +81,18 @@ router
       }
 
       const busboy = new BusBoy({ headers: req.headers });
-
-      if (!ObjectID.isValid(accountId)) {
-        return res.status(400).send('Account ID not valid!');
-      }
-
       const token = await req.user.getTokensForAccounts([accountId]);
 
       busboy.on('file', async (fieldname, file, filename, encoding, mimetype) => {
         await odriveHelper.upload(token, filename, file, Number(req.headers['x-filesize']));
+        // TODO: send back file to front end
         res.send('File Uploaded');
       });
 
       req.pipe(busboy);
     }
-    catch (e) {
-      res.status(400).send(new Error('Error uploading to Onedrive'));
-      console.log(e);
+    catch (error) {
+      res.status(400).send(error.message);
     }
   })
 
@@ -113,7 +108,7 @@ router
       res.send('Item deleted');
     }
     catch (error) {
-      return res.status(400).send(error);
+      res.status(400).send(error.message);
     }
   })
 
@@ -129,7 +124,7 @@ router
       res.send(properties);
     }
     catch (error) {
-      return res.status(400).send(error);
+      res.status(400).send(error.message);
     }
   });
 

@@ -19,7 +19,7 @@ router
       res.send(accounts);
     }
     catch (error) {
-      return res.status(400).send(error.message);
+      res.status(400).send(error.message);
     }
   })
 
@@ -36,7 +36,7 @@ router
       res.send(files);
     }
     catch (error) {
-      return res.status(400).send(error.message);
+      res.status(400).send(error.message);
     }
   })
 
@@ -52,7 +52,7 @@ router
       res.send({ downloadUrl });
     }
     catch (error) {
-      return res.status(400).send(error.message);
+      res.status(400).send(error.message);
     }
   })
 
@@ -68,7 +68,7 @@ router
       res.send(storageInfo);
     }
     catch (error) {
-      return res.status(400).send(error.message);
+      res.status(400).send(error.message);
     }
   })
 
@@ -107,7 +107,7 @@ router
       res.send('Item deleted');
     }
     catch (error) {
-      return res.status(400).send(error.message);
+      res.status(400).send(error.message);
     }
   })
 
@@ -123,7 +123,7 @@ router
       res.send(properties);
     }
     catch (error) {
-      return res.status(400).send(error.message);
+      res.status(400).send(error.message);
     }
   });
 
