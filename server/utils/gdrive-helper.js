@@ -85,16 +85,19 @@ const getUserInfo = async (auth) => {
 const saveToken = async (req, user) => {
   try {
     const code = req.body.code;
-    // we're throwing a custom error here because in response we
-    // cannot send the original error when generated via oAuth client (circular structure)
-    const response = await auth.getToken(code).catch((e) => {
-      throw new Error('Error getting token from Google Servers');
-    });
-    const token = response.tokens;
-    auth.setCredentials(token);
-    const email = await getUserInfo(auth);
-    const accounts = await user.addAccount(token, 'gdrive', email);
-    return accounts;
+    if (code) {
+      // we're throwing a custom error here because in response we
+      // cannot send the original error when generated via oAuth client (circular structure)
+      const tokenResponse = await auth.getToken(code).catch((e) => {
+        throw new Error('Error getting token from Google Servers');
+      });
+      const token = tokenResponse.tokens;
+      auth.setCredentials(token);
+      const email = await getUserInfo(auth);
+      const accounts = await user.addAccount(token, 'gdrive', email);
+      return accounts;
+    }
+    throw new Error('Unable to get code from request');
   }
   catch (e) {
     throw e;
@@ -110,7 +113,7 @@ const getStorageInfo = async (token) => {
     fields: 'storageQuota',
   }).catch((e) => {
     console.log(e);
-    throw new Error('Error getting storage info from Google Servers');
+    throw new Error('Error getting storage info from Google Drive');
   });
   return {
     total: userInfoResponse.data.storageQuota.limit,
@@ -120,15 +123,7 @@ const getStorageInfo = async (token) => {
 
 const getFilesForAccount = async (token, folderId = 'root') => {
   // token = await verifyTokenValidity(token);
-  try {
-    auth.setCredentials(token);
-  }
-  catch (error) {
-    console.log(error);
-    throw new Error('Error authenticating with Google Drive');
-  }
-
-  // need to specify auth as auth: auth or auth: any_other_name
+  auth.setCredentials(token);
   const drive = google.drive({ version: 'v3', auth });
 
   const res = await drive.files.list({
@@ -138,7 +133,7 @@ const getFilesForAccount = async (token, folderId = 'root') => {
     key: 'AIzaSyDHtla9ZqVhQm-dqEbFsM-sArr29XizGg4',
   }).catch((e) => {
     console.log(e);
-    throw new Error('Error getting files');
+    throw new Error('Error getting files from Google Drive');
   });
 
   const files = res.data.files;
@@ -188,18 +183,18 @@ const getDownloadUrl = async (token, fileId) => {
     fileId,
   }).catch((e) => {
     console.log(e);
-    throw new Error('Unable to get file from Google');
+    throw new Error('Unable to get file from Google Drive');
   });
 
   return `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&access_token=${token.access_token}`;
 };
 
-const deleteItem = (token, itemId) => {
+const deleteItem = (token, fileId) => {
   // token = await verifyTokenValidity(token);
   auth.setCredentials(token);
   const drive = google.drive({ version: 'v3', auth });
   return drive.files.delete({
-    fileId: itemId,
+    fileId,
   }).catch((e) => {
     console.log(e);
     throw new Error('Unable to delete file from Google Drive');
@@ -232,7 +227,7 @@ const getProperties = async (token, fileId) => {
     fields: '*',
   }).catch((e) => {
     console.log(e);
-    throw new Error('Unable to get file from Google');
+    throw new Error('Unable to get file properties from Google Drive');
   });
   return propertiesResponse.data;
 };

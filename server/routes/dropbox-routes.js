@@ -19,14 +19,14 @@ router
       res.send(accounts);
     }
     catch (error) {
-      return res.status(400).send(error);
+      return res.status(400).send(error.message);
     }
   })
 
   .get('/listFiles/:accountId/:folderId*?', authenticate, async (req, res) => {
     const accountId = req.params.accountId;
     if (!ObjectID.isValid(accountId)) {
-      return res.status(400).send(new Error('Account ID not valid!'));
+      return res.status(400).send('Account ID not valid!');
     }
 
     const folderId = req.params.folderId;
@@ -36,14 +36,14 @@ router
       res.send(files);
     }
     catch (error) {
-      return res.status(400).send(error);
+      return res.status(400).send(error.message);
     }
   })
 
   .get('/downloadUrl/:accountId/:fileId', authenticate, async (req, res) => {
     const accountId = req.params.accountId;
     if (!ObjectID.isValid(accountId)) {
-      return res.status(400).send(new Error('Account ID not valid!'));
+      return res.status(400).send('Account ID not valid!');
     }
 
     try {
@@ -52,14 +52,14 @@ router
       res.send({ downloadUrl });
     }
     catch (error) {
-      return res.status(400).send(error);
+      return res.status(400).send(error.message);
     }
   })
 
   .get('/storageInfo/:accountId', authenticate, async (req, res) => {
     const accountId = req.params.accountId;
     if (!ObjectID.isValid(accountId)) {
-      return res.status(400).send(new Error('Account ID not valid!'));
+      return res.status(400).send('Account ID not valid!');
     }
 
     try {
@@ -68,7 +68,7 @@ router
       res.send(storageInfo);
     }
     catch (error) {
-      return res.status(400).send(error);
+      return res.status(400).send(error.message);
     }
   })
 
@@ -76,7 +76,7 @@ router
     try {
       const accountId = req.params.accountId;
       if (!ObjectID.isValid(accountId)) {
-        return res.status(400).send(new Error('Account ID not valid!'));
+        return res.status(400).send('Account ID not valid!');
       }
 
       const busboy = new BusBoy({ headers: req.headers });
@@ -98,7 +98,7 @@ router
   .delete('/delete/:accountId/:itemId', authenticate, async (req, res) => {
     const accountId = req.params.accountId;
     if (!ObjectID.isValid(accountId)) {
-      return res.status(400).send(new Error('Account ID not valid!'));
+      return res.status(400).send('Account ID not valid!');
     }
 
     try {
@@ -107,14 +107,14 @@ router
       res.send('Item deleted');
     }
     catch (error) {
-      return res.status(400).send(error);
+      return res.status(400).send(error.message);
     }
   })
 
   .get('/properties/:accountId/:itemId', authenticate, async (req, res) => {
     const accountId = req.params.accountId;
     if (!ObjectID.isValid(accountId)) {
-      return res.status(400).send(new Error('Account ID not valid!'));
+      return res.status(400).send('Account ID not valid!');
     }
 
     try {
@@ -123,7 +123,7 @@ router
       res.send(properties);
     }
     catch (error) {
-      return res.status(400).send(error);
+      return res.status(400).send(error.message);
     }
   });
 
