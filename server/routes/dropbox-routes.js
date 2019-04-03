@@ -80,23 +80,18 @@ router
       }
 
       const busboy = new BusBoy({ headers: req.headers });
-
-      if (!ObjectID.isValid(accountId)) {
-        return res.status(400).send(new Error('Account ID not valid!'));
-      }
-
       const token = await req.user.getTokensForAccounts([accountId]);
 
       busboy.on('file', async (fieldname, file, filename, encoding, mimetype) => {
         await dropboxHelper.upload(token, filename, file);
+        // TODO: send back file to front end
         res.send('File Uploaded');
       });
 
       req.pipe(busboy);
     }
-    catch (e) {
-      res.status(400).send(e);
-      console.log(e);
+    catch (error) {
+      res.status(400).send(error);
     }
   })
 
@@ -128,7 +123,7 @@ router
       res.send(properties);
     }
     catch (error) {
-      return res.status(400).send(new Error('Unable to get item info from Dropbox'));
+      return res.status(400).send(error);
     }
   });
 

@@ -1,15 +1,17 @@
-const Dropbox = require('dropbox').Dropbox;
+const { Dropbox } = require('dropbox');
 const fetch = require('isomorphic-fetch');
 const dropboxStream = require('dropbox-stream');
 const { dropboxCreds } = require('../config/config');
 
-const dbx = new Dropbox({
-  fetch,
-  clientId: dropboxCreds.clientId,
-  clientSecret: dropboxCreds.clientSecret,
-});
+const getAuthorizationUrl = () => {
+  const dbx = new Dropbox({
+    fetch,
+    clientId: dropboxCreds.clientId,
+    clientSecret: dropboxCreds.clientSecret,
+  });
 
-const getAuthorizationUrl = () => dbx.getAuthenticationUrl(dropboxCreds.redirectUri, null, 'code');
+  return dbx.getAuthenticationUrl(dropboxCreds.redirectUri, null, 'code');
+};
 
 const getUserInfo = (token) => {
   const dbx = new Dropbox({ accessToken: token, fetch });
@@ -22,9 +24,22 @@ const getUserInfo = (token) => {
 const saveToken = async (req, user) => {
   try {
     const code = req.body.code;
-    const token = await dbx.getAccessTokenFromCode(dropboxCreds.redirectUri, code);
-    const userInfo = await getUserInfo(token);
-    return user.addAccount({ access_token: token }, 'dropbox', userInfo.email);
+    if (code) {
+      // intialize new dbx oAuth2 client
+      const dbx = new Dropbox({
+        fetch,
+        clientId: dropboxCreds.clientId,
+        clientSecret: dropboxCreds.clientSecret,
+      });
+
+      const token = await dbx.getAccessTokenFromCode(dropboxCreds.redirectUri, code)
+        .catch((e) => {
+          throw new Error('Error getting access token from code!');
+        });
+      const userInfo = await getUserInfo(token);
+      return user.addAccount({ access_token: token }, 'dropbox', userInfo.email);
+    }
+    throw new Error('Unable to get code from request');
   }
   catch (e) {
     console.log(e);
@@ -34,7 +49,11 @@ const saveToken = async (req, user) => {
 
 const getFilesForAccount = async (token, folderId = '') => {
   const dbx = new Dropbox({ accessToken: token.access_token, fetch });
-  return dbx.filesListFolder({ path: folderId });
+  const files = await dbx.filesListFolder({ path: folderId })
+    .catch((e) => {
+      throw new Error('Error getting files from dropbox');
+    });
+  return files;
 };
 
 const getStorageInfo = async (token) => {
@@ -50,7 +69,7 @@ const getDownloadUrl = async (token, fileId) => {
   const dbx = new Dropbox({ accessToken: token.access_token, fetch });
   const response = await dbx.filesGetTemporaryLink({ path: fileId }).catch((e) => {
     console.log(e);
-    throw new Error('Unable to get file from Dropbox');
+    throw new Error('Unable to get download link from Dropbox');
   });
   return response.link;
 };
@@ -77,31 +96,36 @@ const upload = async (token, filename, readableStream, path = '/') => new Promis
   readableStream.pipe(up);
 });
 
-const deleteItem = (token, itemId) => {
+const deleteItem = async (token, itemId) => {
   const dbx = new Dropbox({ accessToken: token.access_token, fetch });
-  return dbx.filesDelete({ path: itemId }).catch((e) => {
+  const deletedItem = await dbx.filesDelete({ path: itemId }).catch((e) => {
     console.log(e);
     throw new Error('Unable to delete file from Dropbox');
   });
+  return deletedItem;
 };
 
-const getDownloadStream = (token, fileId) => {
+const getDownloadStream = (token, fileId) => new Promise((resolve, reject) => {
   const stream = dropboxStream.createDropboxDownloadStream({
     token: token.access_token,
     path: fileId,
   })
     .on('error', (err) => {
       console.log(err);
-      throw new Error('Unable to download file from Dropbox');
+      reject('Unable to download file from Dropbox');
     })
     .on('progress', res => console.log(res));
 
-  return stream;
-};
+  resolve(stream);
+});
 
 const getProperties = async (token, itemId) => {
   const dbx = new Dropbox({ accessToken: token.access_token, fetch });
-  return dbx.filesGetMetadata({ path: itemId });
+  const metadata = await dbx.filesGetMetadata({ path: itemId }).catch((e) => {
+    console.log(e);
+    throw new Error('Unable to get file properties from Dropbox');
+  });
+  return metadata;
 };
 
 module.exports = {
