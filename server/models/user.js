@@ -179,34 +179,6 @@ UserSchema.methods.getTokensForAccounts = function (accountIds) {
   });
 };
 
-UserSchema.methods.changeMergedStatus = function (accountIds, status) {
-  const user = this;
-  let error = false;
-
-  return new Promise((resolve, reject) => {
-    accountIds.forEach((accountId) => {
-      if (user.accounts.id(accountId)) {
-        const account = user.accounts.id(accountId);
-        account.merged = status;
-      }
-      else {
-        error = true;
-      }
-    });
-
-    // we only update the accounts, if we were able to find all accounts
-    if (!error) {
-      user.save().then(() => resolve('Updated accounts!'), (e) => {
-        reject(e);
-      });
-    }
-    else {
-      reject('One or more account ids was incorrect!');
-    }
-  });
-};
-
-
 UserSchema.methods.removeToken = function (token) {
   const user = this;
   return user.updateOne({
@@ -227,10 +199,6 @@ UserSchema.methods.removeAccount = function (accountId) {
 
   if (!(user.accounts.id(accountId))) {
     return Promise.reject('Account not found!');
-  }
-
-  if (user.accounts.id(accountId).merged) {
-    return Promise.reject('Cannot remove a merged account!');
   }
 
   return user.updateOne({

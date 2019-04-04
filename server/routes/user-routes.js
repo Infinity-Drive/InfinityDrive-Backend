@@ -37,7 +37,7 @@ router
       // link = "http://" + req.get('host') + "/verify?id=" + rand;
       const mailOptions = {
         to: body.email,
-        subject: 'Please confirm your Email account',
+        subject: 'Confirm signup for Infinity Drive',
         html: `Hello,<br> Please Click on the link to verify your email.<br><a href=http://localhost:4200/EmailVerification/${token}>Click here to verify</a>`,
       };
       // console.log(mailOptions);
@@ -93,24 +93,18 @@ router
 
   .get('/getAccounts', authenticate, async (req, res) => {
     const accounts = req.user.accounts.toObject();
-    if (accounts) {
-      const values = await getAccountsStorage(accounts);
-      accounts.forEach((account, i) => {
-        account.storage = values[i];
-      });
-      res.send(accounts);
-    }
-    else {
-      res.status(400).send('No accounts found');
-    }
-  })
 
-  .patch('/manage/accounts/merge', authenticate, (req, res) => {
     try {
-      // accountIds is an array that will hold the object ids of the accounts to be updated
-      const body = _.pick(req.body, ['accountIds', 'status']);
-      const msg = req.user.changeMergedStatus(body.accountIds, body.status);
-      res.send(msg);
+      if (accounts) {
+        const storageValues = await getAccountsStorage(accounts);
+        accounts.forEach((account, i) => {
+          account.storage = storageValues[i];
+        });
+        res.send(accounts);
+      }
+      else {
+        res.status(400).send('No accounts found');
+      }
     }
     catch (error) {
       res.status(400).send(error);
@@ -122,7 +116,8 @@ router
     if (!ObjectID.isValid(accountId)) {
       return res.status(404).send('Account ID not valid!');
     }
-    req.user.removeAccount(accountId).then(result => res.send(result)).catch(e => res.send(e));
+    req.user.removeAccount(accountId).then(result => res.send(result))
+      .catch(e => res.send(e));
   });
 
 module.exports = router;
