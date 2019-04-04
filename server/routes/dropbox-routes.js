@@ -125,6 +125,26 @@ router
     catch (error) {
       res.status(400).send(error.message);
     }
+  })
+
+  .post('/createFolder/:accountId', authenticate, async (req, res) => {
+    const accountId = req.params.accountId;
+    if (!ObjectID.isValid(accountId)) {
+      return res.status(400).send('Account ID not valid!');
+    }
+
+    if (req.body.folderName.trim() === '') {
+      return res.status(400).send('Folder name can\'t be empty');
+    }
+
+    try {
+      const token = await req.user.getTokensForAccounts([accountId]);
+      const folder = await dropboxHelper.createFolder(token, req.body.folderName, req.body.path);
+      res.send(folder);
+    }
+    catch (error) {
+      res.status(400).send(error.message);
+    }
   });
 
 module.exports = router;

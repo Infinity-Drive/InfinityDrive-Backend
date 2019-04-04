@@ -7,6 +7,8 @@ const dropboxRoutes = require('./routes/dropbox-routes.js');
 const mergedRoutes = require('./routes/merged-routes.js');
 const userRoutes = require('./routes/user-routes.js');
 
+const PORT = process.env.PORT || 3000;
+
 const app = express();
 app.use(bodyParser.json()); // body parser lets us send json to our server
 
@@ -25,6 +27,4 @@ app.use('/dropbox', dropboxRoutes);
 app.use('/merged', mergedRoutes);
 app.use('/users', userRoutes);
 
-app.listen('3000', () => {
-  console.log('Server started');
-});
+app.listen(PORT, () => console.log(`Listening on ${PORT}`));

@@ -106,7 +106,7 @@ const saveToken = async (req, user) => {
 
 
 const getStorageInfo = async (token) => {
-  // token = await verifyTokenValidity(token);
+  token = await verifyTokenValidity(token);
   auth.setCredentials(token);
   const drive = google.drive({ version: 'v3', auth });
   const userInfoResponse = await drive.about.get({
@@ -122,7 +122,7 @@ const getStorageInfo = async (token) => {
 };
 
 const getFilesForAccount = async (token, folderId = 'root') => {
-  // token = await verifyTokenValidity(token);
+  token = await verifyTokenValidity(token);
   auth.setCredentials(token);
   const drive = google.drive({ version: 'v3', auth });
 
@@ -145,7 +145,7 @@ const getFilesForAccount = async (token, folderId = 'root') => {
 };
 
 const upload = async (token, fileName, readStream) => {
-  // token = await verifyTokenValidity(token);
+  token = await verifyTokenValidity(token);
   auth.setCredentials(token);
 
   console.log(`---- Uploading ${fileName} to Google Drive ----`);
@@ -189,8 +189,8 @@ const getDownloadUrl = async (token, fileId) => {
   return `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&access_token=${token.access_token}`;
 };
 
-const deleteItem = (token, fileId) => {
-  // token = await verifyTokenValidity(token);
+const deleteItem = async (token, fileId) => {
+  token = await verifyTokenValidity(token);
   auth.setCredentials(token);
   const drive = google.drive({ version: 'v3', auth });
   return drive.files.delete({
@@ -202,6 +202,7 @@ const deleteItem = (token, fileId) => {
 };
 
 const getDownloadStream = async (token, fileId) => {
+  token = await verifyTokenValidity(token);
   auth.setCredentials(token);
   const drive = google.drive({ version: 'v3', auth });
 
@@ -219,7 +220,7 @@ const getDownloadStream = async (token, fileId) => {
 };
 
 const getProperties = async (token, fileId) => {
-  // token = await verifyTokenValidity(token);
+  token = await verifyTokenValidity(token);
   auth.setCredentials(token);
   const drive = google.drive({ version: 'v3', auth });
   const propertiesResponse = await drive.files.get({
@@ -232,6 +233,27 @@ const getProperties = async (token, fileId) => {
   return propertiesResponse.data;
 };
 
+const createFolder = async (token, folderName, parentFolder = 'root') => {
+  token = await verifyTokenValidity(token);
+  auth.setCredentials(token);
+  const drive = google.drive({ version: 'v3', auth });
+
+  const fileMetadata = {
+    name: folderName,
+    mimeType: 'application/vnd.google-apps.folder',
+    parents: [parentFolder],
+  };
+
+  const folderCreationResponse = await drive.files.create({
+    resource: fileMetadata,
+    fields: 'id',
+  }).catch((e) => {
+    console.log(e);
+    throw new Error('Error creating folder in Google Drive');
+  });
+  return folderCreationResponse.data;
+};
+
 module.exports = {
   getAuthorizationUrl,
   saveToken,
@@ -242,4 +264,5 @@ module.exports = {
   deleteItem,
   getDownloadStream,
   getProperties,
+  createFolder,
 };

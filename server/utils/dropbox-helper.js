@@ -128,6 +128,16 @@ const getProperties = async (token, itemId) => {
   return metadata;
 };
 
+const createFolder = async (token, folderName, path = '/') => {
+  const dbx = new Dropbox({ accessToken: token.access_token, fetch });
+  const metadata = await dbx.filesCreateFolder({ path: `${path}${folderName}`, autorename: true })
+    .catch((e) => {
+      console.log(e);
+      throw new Error('Error creating folder in Dropbox');
+    });
+  return metadata;
+};
+
 module.exports = {
   getAuthorizationUrl,
   saveToken,
@@ -138,4 +148,5 @@ module.exports = {
   deleteItem,
   getDownloadStream,
   getProperties,
+  createFolder,
 };
