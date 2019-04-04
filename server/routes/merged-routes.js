@@ -47,7 +47,7 @@ router
       busboy.on('file', async (fieldname, file, name, encoding, mimeType) => {
         const ids = await splitter.splitFileAndUpload(tokens, file, Number(req.headers['x-filesize']), name);
         const parts = [];
-        await accounts.forEach((account, i) => {
+        accounts.forEach((account, i) => {
           parts.push({
             accountType: account.accountType,
             accountId: account._id,
@@ -56,17 +56,8 @@ router
         });
 
         const splitDirectory = await req.user.getSplitDirectory();
-        const splitFileId = await splitDirectory.addFile(name, Number(req.headers['x-filesize']), parts, mimeType);
-
-        res.send({
-          id: splitFileId.toString(),
-          name,
-          mimeType,
-          modifiedTime: new Date().toISOString(),
-          size: Number(req.headers['x-filesize']),
-          accountType: 'merged',
-          account: 'Merged',
-        });
+        const splitFile = await splitDirectory.addFile(name, Number(req.headers['x-filesize']), parts, mimeType);
+        res.send(splitFile);
       });
 
       req.pipe(busboy);

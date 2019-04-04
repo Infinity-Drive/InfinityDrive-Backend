@@ -1,7 +1,6 @@
 const odriveHelper = require('./odrive-helper.js');
 const dropboxHelper = require('./dropbox-helper.js');
 const gdriveHelper = require('./gdrive-helper');
-const merger = require('./merger');
 
 const getFilesForAccount = async (accounts, user) => {
   const filePromises = [];
@@ -38,34 +37,6 @@ const getFilesForAccount = async (accounts, user) => {
   return accounts;
 };
 
-const download = async (parts, user, response) => {
-  const streamPromises = [];
-
-  try {
-    // get account id for each account that holds a part
-    const accountIds = parts.map(part => part.accountId);
-    // get tokens for each account that holds a part
-    const tokens = await user.getTokensForAccounts(accountIds);
-
-    parts.forEach((part, i) => {
-      if (part.accountType === 'gdrive') {
-        streamPromises.push(gdriveHelper.getDownloadStream(tokens[i], part.partId));
-      }
-      if (part.accountType === 'odrive') {
-        streamPromises.push(odriveHelper.getDownloadStream(tokens[i], part.partId));
-      }
-      if (part.accountType === 'dropbox') {
-        streamPromises.push(dropboxHelper.getDownloadStream(tokens[i], part.partId));
-      }
-    });
-    const streams = await Promise.all(streamPromises);
-    merger.mergeFile(streams, response);
-  }
-  catch (error) {
-    throw error;
-  }
-};
-
 const deleteParts = async (parts, user) => {
   const deletionPromises = [];
 
@@ -94,4 +65,4 @@ const deleteParts = async (parts, user) => {
   }
 };
 
-module.exports = { getFilesForAccount, download, deleteParts };
+module.exports = { getFilesForAccount, deleteParts };

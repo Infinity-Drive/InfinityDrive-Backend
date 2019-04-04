@@ -4,7 +4,14 @@ mongoose.connect('mongodb://localhost:27017/InfinityDrive', { useNewUrlParser: t
 mongoose.set('useCreateIndex', true);
 
 const SplitDirectorySchema = new mongoose.Schema({
-
+  accountType: {
+    type: String,
+    default: 'merged',
+  },
+  account: {
+    type: String,
+    default: 'Merged',
+  },
   name: {
     type: String,
     default: 'root',
@@ -38,20 +45,23 @@ SplitDirectorySchema.methods.addFile = async function (name, size, parts, mimeTy
   const directory = this;
   const id = new mongoose.Types.ObjectId();
 
-  directory.content.push(
-    new SplitDirectory({
-      _id: id,
-      name,
-      folder: false,
-      size,
-      mimeType,
-      modifiedTime: new Date().toISOString(),
-      parts,
-    }),
-  );
+  const newSplitFile = new SplitDirectory({
+    _id: id,
+    name,
+    folder: false,
+    size,
+    mimeType,
+    modifiedTime: new Date().toISOString(),
+    parts,
+  });
 
-  await directory.save();
-  return id;
+  directory.content.push(newSplitFile);
+
+  await directory.save().catch((e) => {
+    throw new Error('Error saving file');
+  });
+
+  return newSplitFile;
 };
 
 SplitDirectorySchema.methods.getFile = function (fileId) {
