@@ -55,11 +55,6 @@ const UserSchema = new mongoose.Schema({
   }],
 
   accounts: [{
-    merged: {
-      type: Boolean,
-      default: false,
-    },
-
     accountType: {
       type: String,
     },

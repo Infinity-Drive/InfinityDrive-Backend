@@ -66,13 +66,8 @@ SplitDirectorySchema.methods.addFile = async function (name, size, parts, mimeTy
 
 SplitDirectorySchema.methods.getFile = function (fileId) {
   const splitDirectory = this;
-
-  const file = splitDirectory.content.toObject().filter(file => file._id.toString() === fileId);
-
-  if (file) {
-    return file[0];
-  }
-  return new Error('File not found');
+  const file = splitDirectory.content.toObject().filter(f => f._id.toString() === fileId);
+  return file ? file[0] : new Error('File not found');
 };
 
 SplitDirectorySchema.methods.removeFile = function (fileId) {

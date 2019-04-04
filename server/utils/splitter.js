@@ -4,32 +4,37 @@ const gdriveHelper = require('./gdrive-helper');
 const odriveHelper = require('./odrive-helper');
 const dropboxHelper = require('./dropbox-helper');
 
-const startUpload = (token, originalFileName, stream, index, size) => {
-  const fileName = `${originalFileName}.infinitydrive.part${index}`;
-  if (token.accountType === 'gdrive') {
-    return gdriveHelper.upload(token, fileName, stream);
-  }
-  if (token.accountType === 'dropbox') {
-    return dropboxHelper.upload(token, fileName, stream);
-  }
-  if (token.accountType === 'odrive') {
-    return odriveHelper.upload(token, fileName, stream, size);
-  }
-};
-
 const splitFileAndUpload = (tokens, readStream, fileSize, fileName) => new Promise((resolve) => {
   // index of current duplex stream
   let index = 0;
   let totalRead = 0;
   let chunksRead = 0;
-  const chunksPerAccount = Math.ceil((fileSize / 16000) / tokens.length);
 
-  const duplexStreams = [];
   // ids for each uploaded chunk (holds promises)
   const partsId = [];
+  const duplexStreams = [];
+  const chunksPerAccount = Math.ceil((fileSize / 16000) / tokens.length);
 
-  for (let i = 0; i < tokens.length; i += 1) {
+  tokens.forEach((token) => {
     duplexStreams.push(new PassThrough());
+  });
+
+  function startUpload() {
+    const newFileName = `${fileName}.infinitydrive.part${index}`;
+    // if we are uploading to the last account we need to specify upload
+    // size as the remaining data, this is because our chunk division is
+    // never perfect
+    const uploadSize = index !== tokens.length - 1 ? chunksPerAccount * 16000 : fileSize - totalRead;
+
+    if (tokens[index].accountType === 'gdrive') {
+      return gdriveHelper.upload(tokens[index], newFileName, duplexStreams[index]);
+    }
+    if (tokens[index].accountType === 'dropbox') {
+      return dropboxHelper.upload(tokens[index], newFileName, duplexStreams[index]);
+    }
+    if (tokens[index].accountType === 'odrive') {
+      return odriveHelper.upload(tokens[index], newFileName, duplexStreams[index], uploadSize);
+    }
   }
 
   // https://nodejs.org/api/stream.html#stream_writable_write_chunk_encoding_callback
@@ -65,11 +70,7 @@ const splitFileAndUpload = (tokens, readStream, fileSize, fileName) => new Promi
             chunksRead = 0;
             // get next stream index
             index += 1;
-            // if we are uploading to the last account we need to specify upload
-            // size as the remaining data, this is because our chunk division is
-            // never perfect
-            const uploadSize = index !== tokens.length - 1 ? chunksPerAccount * 16000 : fileSize - totalRead;
-            partsId[index] = startUpload(tokens[index], fileName, duplexStreams[index], index, uploadSize);
+            partsId[index] = startUpload();
           }
         }
         // set readData() on start of next event loop, if we don't do this, node will
@@ -88,7 +89,7 @@ const splitFileAndUpload = (tokens, readStream, fileSize, fileName) => new Promi
     resolve(ids);
   });
 
-  partsId[index] = startUpload(tokens[index], fileName, duplexStreams[index], index, chunksPerAccount * 16000);
+  partsId[index] = startUpload();
 });
 
 module.exports = { splitFileAndUpload };
