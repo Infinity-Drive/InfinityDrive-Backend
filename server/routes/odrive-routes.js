@@ -83,8 +83,16 @@ router
       const busboy = new BusBoy({ headers: req.headers });
       const token = await req.user.getTokensForAccounts([accountId]);
 
-      busboy.on('file', async (fieldname, file, filename, encoding, mimetype) => {
-        await odriveHelper.upload(token, filename, file, Number(req.headers['x-filesize']));
+      let parentId = 'root';
+
+      busboy.on('field', (fieldname, val) => {
+        if (fieldname === 'parentId') {
+          parentId = val;
+        }
+      });
+
+      busboy.on('file', async (fieldname, file, filename) => {
+        await odriveHelper.upload(token, filename, file, Number(req.headers['x-filesize']), parentId);
         // TODO: send back file to front end
         res.send('File Uploaded');
       });

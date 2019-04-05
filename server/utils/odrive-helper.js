@@ -161,7 +161,7 @@ const getStorageInfo = async (token) => {
   return { total: info.data.quota.total.toString(), used: info.data.quota.used.toString() };
 };
 
-const upload = async (token, filename, readableStream, fileSize) => {
+const upload = async (token, filename, readableStream, fileSize, parentId) => {
   token = await verifyTokenValidity(token);
   console.log(`---- Uploading ${filename} to Onedrive ----`);
   const file = await oneDriveAPI.items.uploadSession({
@@ -170,6 +170,7 @@ const upload = async (token, filename, readableStream, fileSize) => {
     fileSize,
     readableStream,
     chunksToUpload: 170,
+    parentId,
   }).catch((e) => {
     console.log(e);
     throw new Error('Error uploading file to OneDrive');

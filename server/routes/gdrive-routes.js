@@ -83,13 +83,19 @@ router
 
       const busboy = new BusBoy({ headers: req.headers });
       const token = await req.user.getTokensForAccounts([accountId]);
+      let parentId = 'root';
 
-      busboy.on('file', async (fieldname, file, filename, encoding, mimetype) => {
-        const uploadedFile = await gdriveHelper.upload(token, filename, file);
+      busboy.on('field', (fieldname, val) => {
+        if (fieldname === 'parentId') {
+          parentId = val;
+        }
+      });
+
+      busboy.on('file', async (fieldname, file, filename) => {
+        await gdriveHelper.upload(token, filename, file, parentId);
         // TODO: send back file to front end
         res.send('File Uploaded');
       });
-
       req.pipe(busboy);
     }
     catch (error) {

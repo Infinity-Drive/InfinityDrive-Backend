@@ -144,7 +144,7 @@ const getFilesForAccount = async (token, folderId = 'root') => {
   return [];
 };
 
-const upload = async (token, fileName, readStream) => {
+const upload = async (token, fileName, readStream, parentId) => {
   token = await verifyTokenValidity(token);
   auth.setCredentials(token);
 
@@ -152,6 +152,7 @@ const upload = async (token, fileName, readStream) => {
   const drive = google.drive({ version: 'v3', auth });
   const fileMetadata = {
     name: fileName,
+    parents: [parentId],
   };
   const media = {
     body: readStream,

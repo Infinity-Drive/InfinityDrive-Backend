@@ -81,9 +81,16 @@ router
 
       const busboy = new BusBoy({ headers: req.headers });
       const token = await req.user.getTokensForAccounts([accountId]);
+      let path = '/';
 
-      busboy.on('file', async (fieldname, file, filename, encoding, mimetype) => {
-        await dropboxHelper.upload(token, filename, file);
+      busboy.on('field', (fieldname, val) => {
+        if (fieldname === 'path') {
+          path = val;
+        }
+      });
+
+      busboy.on('file', async (fieldname, file, filename) => {
+        await dropboxHelper.upload(token, filename, file, path);
         // TODO: send back file to front end
         res.send('File Uploaded');
       });
