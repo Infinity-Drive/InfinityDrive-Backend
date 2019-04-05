@@ -246,12 +246,19 @@ const createFolder = async (token, folderName, parentFolder = 'root') => {
 
   const folderCreationResponse = await drive.files.create({
     resource: fileMetadata,
-    fields: 'id',
+    fields: 'id,name,modifiedTime,size',
   }).catch((e) => {
     console.log(e);
     throw new Error('Error creating folder in Google Drive');
   });
-  return folderCreationResponse.data;
+
+  return {
+    id: folderCreationResponse.data.id,
+    name: folderCreationResponse.data.name,
+    mimeType: 'folder',
+    modifiedTime: folderCreationResponse.data.modifiedTime,
+    size: folderCreationResponse.data.size,
+  };
 };
 
 module.exports = {

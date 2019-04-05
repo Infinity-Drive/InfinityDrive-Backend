@@ -225,7 +225,7 @@ const getProperties = async (token, itemId) => {
 const createFolder = async (token, folderName, parentFolder = 'root') => {
   token = await verifyTokenValidity(token);
 
-  return oneDriveAPI.items.createFolder({
+  const folder = await oneDriveAPI.items.createFolder({
     accessToken: token.access_token,
     rootItemId: parentFolder,
     name: folderName,
@@ -233,6 +233,14 @@ const createFolder = async (token, folderName, parentFolder = 'root') => {
     console.log(e);
     throw new Error('Error creating folder in OneDrive');
   });
+
+  return {
+    id: folder.id,
+    name: folder.name,
+    mimeType: 'folder',
+    modifiedTime: folder.lastModifiedDateTime,
+    size: folder.size,
+  };
 };
 
 module.exports = {

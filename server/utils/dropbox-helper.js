@@ -135,7 +135,12 @@ const createFolder = async (token, folderName, path = '/') => {
       console.log(e);
       throw new Error('Error creating folder in Dropbox');
     });
-  return metadata;
+  return {
+    id: metadata.id,
+    name: metadata.name,
+    mimeType: 'folder',
+    modifiedTime: '-',
+  };
 };
 
 module.exports = {
