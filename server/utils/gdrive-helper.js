@@ -144,7 +144,7 @@ const getFilesForAccount = async (token, folderId = 'root') => {
   return [];
 };
 
-const upload = async (token, fileName, readStream, parentId) => {
+const upload = async (token, fileName, readStream, parentId = 'root') => {
   token = await verifyTokenValidity(token);
   auth.setCredentials(token);
 
