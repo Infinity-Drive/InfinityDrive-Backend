@@ -118,6 +118,14 @@ router
     }
     req.user.removeAccount(accountId).then(result => res.send(result))
       .catch(e => res.send(e));
+  })
+
+  .delete('/logout', authenticate, (req, res) => {
+    req.user.removeToken(req.token).then(() => {
+      res.status(200).send();
+    }, () => {
+      res.status(400).send();
+    });
   });
 
 module.exports = router;
