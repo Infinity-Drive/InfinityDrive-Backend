@@ -214,13 +214,26 @@ const getDownloadStream = async (token, itemId) => {
 const getProperties = async (token, itemId) => {
   token = await verifyTokenValidity(token);
 
-  return oneDriveAPI.items.getMetadata({
+  const metadata = await oneDriveAPI.items.getMetadata({
     accessToken: token.access_token,
     itemId,
   }).catch((e) => {
     console.log(e);
     throw new Error('Error getting item info from OneDrive');
   });
+
+  return {
+    name: metadata.name,
+    creationDate: metadata.createdDateTime,
+    modifiedDate: metadata.lastModifiedDateTime,
+    size: metadata.size,
+    link: `<a href="${metadata.webUrl}" target="_blank">OneDrive</a>`,
+    ...(metadata.createdBy.user && { createdByUser: metadata.createdBy.user.displayName }),
+    ...(metadata.createdBy.application && { createdByApplication: metadata.createdBy.application.displayName }),
+    // object spread syntax, if metadata.file exists then add
+    // key mimeType: ...
+    ...(metadata.file && { mimeType: metadata.file.mimeType }),
+  };
 };
 
 const createFolder = async (token, folderName, parentFolder = 'root') => {

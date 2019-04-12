@@ -125,7 +125,12 @@ const getProperties = async (token, itemId) => {
     console.log(e);
     throw new Error('Unable to get file properties from Dropbox');
   });
-  return metadata;
+
+  return {
+    name: metadata.name,
+    ...(metadata.size && { size: metadata.size }),
+    ...(metadata.client_modified && { modifiedDate: metadata.client_modified }),
+  };
 };
 
 const createFolder = async (token, folderName, path = '/') => {

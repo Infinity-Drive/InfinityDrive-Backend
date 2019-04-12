@@ -226,12 +226,22 @@ const getProperties = async (token, fileId) => {
   const drive = google.drive({ version: 'v3', auth });
   const propertiesResponse = await drive.files.get({
     fileId,
-    fields: '*',
+    fields: 'name, createdTime, modifiedTime, size, webViewLink, mimeType',
   }).catch((e) => {
     console.log(e);
     throw new Error('Unable to get file properties from Google Drive');
   });
-  return propertiesResponse.data;
+
+  return {
+    name: propertiesResponse.data.name,
+    creationDate: propertiesResponse.data.createdTime,
+    modifiedDate: propertiesResponse.data.modifiedTime,
+    size: propertiesResponse.data.size ? Number(propertiesResponse.data.size) : 0,
+    link: `<a href="${propertiesResponse.data.webViewLink}" target="_blank">Google Drive</a>`,
+    mimeType: propertiesResponse.data.mimeType === 'application/vnd.google-apps.folder'
+      ? 'Google Drive Folder'
+      : propertiesResponse.data.mimeType,
+  };
 };
 
 const createFolder = async (token, folderName, parentFolder = 'root') => {
