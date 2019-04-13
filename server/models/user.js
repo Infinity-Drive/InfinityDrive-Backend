@@ -112,9 +112,22 @@ UserSchema.methods.generateVerificationToken = function () {
 UserSchema.methods.verifyEmail = function (token) {
   // this method run for a given user object.
   const user = this; // we didnt use a cb function since we want to use 'this'
-  user.isVerified = true;
+  // user.isVerified = true;
+
+  return user.updateOne({
+    // pull operator lets us pull out a wanted object
+    $pull: {
+      // pull from token array the token object with the same properties as the token passed
+      // into the method
+      tokens: {
+        // whole token object is remove
+        token,
+      },
+    },
+  isVerified:true});
+  
   // user.tokens.pull({token});
-  return user.save().then(() => token);
+  //return user.save().then(() => token);
 };
 
 

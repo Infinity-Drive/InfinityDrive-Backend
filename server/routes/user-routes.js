@@ -47,7 +47,7 @@ router
           res.status(400).send(error);
         }
         else {
-          console.log('Message sent');
+          // console.log('Message sent');
           res.header('x-auth', token).send(newUser);
           res.end('sent');
         }
@@ -79,8 +79,11 @@ router
           return Promise.reject();
         }
         // console.log(user)
-        user.verifyEmail(token);
-        res.send('Verified');
+        user.verifyEmail(token).then(() => {
+          res.status(200).send('Verified');
+        }, (e) => {
+          res.status(400).send(e);
+        });
       }).catch((e) => {
         console.log(e);
         res.status(401).send('Not authorized');
