@@ -16,6 +16,15 @@ const SharedFileSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  fileName:{
+    type: String
+  },
+  fileType:{
+    type: String
+  },
+  fileSize:{
+    type: String
+  },
   sharedToken:{
     type: String
   }
