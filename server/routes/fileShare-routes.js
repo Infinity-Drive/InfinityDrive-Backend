@@ -17,4 +17,20 @@ router
     })
   })
 
+  .get('/getsharedFile/:shareToken', (req, res) => {
+
+    const token = req.params.shareToken;
+    
+    sharedFile.findByToken(token).then((file) => {
+      // valid token but user not found
+      if (!file) {
+        return Promise.reject("File not found");
+      }
+      res.send(file)
+  
+    }).catch((e) => {
+      res.status(404).send(e);
+    });
+  });
+
   module.exports = router;

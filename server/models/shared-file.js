@@ -32,6 +32,23 @@ SharedFileSchema.methods.generateShareToken = function () {
   return share.save().then(() => token);
 };
 
+SharedFileSchema.statics.findByToken = function (token) {
+  const Share = this;
+  let decoded;
+
+  try {
+    decoded = jwt.verify(token, 'my secret');
+  }
+  catch (e) {
+    return Promise.reject(e);
+  }
+
+  return Share.findOne({ // find user against the given token
+    _id: decoded._id,
+    'sharedToken': token, // quotes are required when we have a . in the value
+  }); // since we're returning this, the promise can be caught in server.js
+};
+
 
 const sharedFile = mongoose.model('shareFile', SharedFileSchema);
 
