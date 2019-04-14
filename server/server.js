@@ -6,6 +6,7 @@ const odriveRoutes = require('./routes/odrive-routes.js');
 const dropboxRoutes = require('./routes/dropbox-routes.js');
 const mergedRoutes = require('./routes/merged-routes.js');
 const userRoutes = require('./routes/user-routes.js');
+const filesShareRoutes = require('./routes/fileShare-routes');
 
 const PORT = process.env.PORT || 3000;
 
@@ -26,5 +27,6 @@ app.use('/odrive', odriveRoutes);
 app.use('/dropbox', dropboxRoutes);
 app.use('/merged', mergedRoutes);
 app.use('/users', userRoutes);
+app.use('/share', filesShareRoutes);
 
 app.listen(PORT, () => console.log(`Listening on ${PORT}`));
