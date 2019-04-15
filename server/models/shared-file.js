@@ -14,20 +14,20 @@ const SharedFileSchema = new mongoose.Schema({
   },
   accountType: {
     type: String,
-    required: true
+    required: true,
   },
-  fileName:{
-    type: String
+  fileName: {
+    type: String,
   },
-  fileType:{
-    type: String
+  fileType: {
+    type: String,
   },
-  fileSize:{
-    type: String
+  fileSize: {
+    type: String,
   },
-  sharedToken:{
-    type: String
-  }
+  sharedToken: {
+    type: String,
+  },
 });
 
 
@@ -52,13 +52,13 @@ SharedFileSchema.statics.findByToken = function (token) {
     return Promise.reject(e);
   }
 
-  return Share.findOne({ // find user against the given token
+  return Share.findOne({
     _id: decoded._id,
-    'sharedToken': token, // quotes are required when we have a . in the value
-  }); // since we're returning this, the promise can be caught in server.js
+    sharedToken: token,
+  });
 };
 
 
-const sharedFile = mongoose.model('shareFile', SharedFileSchema);
+const sharedFile = mongoose.model('SharedFile', SharedFileSchema);
 
 module.exports = { sharedFile };
