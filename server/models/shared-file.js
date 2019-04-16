@@ -12,6 +12,9 @@ const SharedFileSchema = new mongoose.Schema({
   accountId: {
     type: String,
   },
+  userId: {
+    type: String,
+  },
   accountType: {
     type: String,
     required: true,

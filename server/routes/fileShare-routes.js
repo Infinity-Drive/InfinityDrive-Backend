@@ -17,6 +17,7 @@ router
         const newSharedFile = new SharedFile({
           clientFileId: req.body.clientFileId,
           accountId: req.body.accountId,
+          userId: req.body.userId,
           accountType: req.body.accountType,
           fileName: req.body.fileName,
           fileSize: req.body.fileSize,
