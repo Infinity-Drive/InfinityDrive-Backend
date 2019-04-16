@@ -6,6 +6,8 @@ const { authenticate } = require('../middleware/authenticate');
 const splitter = require('../utils/splitter');
 const mergedHelper = require('../utils/merged-helper');
 const merger = require('../utils/merger');
+const { sharedFile: SharedFile } = require('../models/shared-file');
+const { User } = require('../models/user');
 
 const router = express.Router();
 
@@ -31,6 +33,37 @@ router
       const splitDirectory = await req.user.getSplitDirectory();
       const file = splitDirectory.getFile(fileId);
       merger.mergeFile(file.parts, req.user, res);
+    }
+    catch (error) {
+      // console.log(error);
+      res.status(400).send('Unable to download file');
+    }
+  })
+
+
+  .post('/downloadShare/:fileId', authenticate, async (req, res) => {
+    const fileId = req.params.fileId;
+
+    if (!ObjectID.isValid(fileId)) {
+      return res.status(400).send('File ID not valid!');
+    }
+
+    try {
+
+       SharedFile.findById(req.body.shareId).then((doc) => {
+            return User.findById(doc.userId)
+        },(err)=>{
+          return res.status(400).send('File ID not valid!');
+        }).then((user)=>{
+          return user.getSplitDirectory();
+        },(err2)=>{
+          return res.status(400).send('File ID not valid!');
+        }).then((splitDirectory)=>{
+          const file = splitDirectory.getFile(fileId);
+          merger.mergeFile(file.parts, req.user, res);
+        },(err3)=>{
+          return res.status(400).send('File ID not valid!');
+        })
     }
     catch (error) {
       // console.log(error);
