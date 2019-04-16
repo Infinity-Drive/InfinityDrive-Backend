@@ -5,6 +5,9 @@ const BusBoy = require('busboy');
 const { authenticate } = require('../middleware/authenticate');
 const odriveHelper = require('../utils/odrive-helper');
 
+const { sharedFile: SharedFile } = require('../models/shared-file');
+const { User } = require('../models/user');
+
 const router = express.Router();
 
 router
@@ -51,6 +54,31 @@ router
       const token = await req.user.getTokensForAccounts([accountId]);
       const downloadUrl = await odriveHelper.getDownloadUrl(token, req.params.fileId);
       res.send({ downloadUrl });
+    }
+    catch (error) {
+      res.status(400).send(error.message);
+    }
+  })
+
+  .post('/downloadUrlShared/:accountId/:fileId', async (req, res) => {
+    const accountId = req.params.accountId;
+    if (!ObjectID.isValid(accountId)) {
+      return res.status(400).send('Account ID not valid!');
+    }
+
+    try {
+
+      SharedFile.findById(req.body.shareId).then((doc) => {
+        return User.findById(doc.userId)
+    }).then((user)=>{
+      return user.getTokensForAccounts([accountId]);
+    }).then((token)=>{
+      return odriveHelper.getDownloadUrl(token, req.params.fileId);
+    }).then((downloadUrl)=>{
+      res.send({ downloadUrl });
+    }).catch((err)=>{
+      return res.status(400).send(err);
+    })
     }
     catch (error) {
       res.status(400).send(error.message);

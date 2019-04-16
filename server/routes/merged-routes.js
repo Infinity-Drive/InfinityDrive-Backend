@@ -41,33 +41,31 @@ router
   })
 
 
-  .post('/downloadShare/:fileId', authenticate, async (req, res) => {
+  .get('/downloadShare/:fileId/:shareId', async (req, res) => {
     const fileId = req.params.fileId;
+    const shareId = req.params.shareId;
+    let userr;
 
     if (!ObjectID.isValid(fileId)) {
-      return res.status(400).send('File ID not valid!');
+      return res.status(400).send("File id not valid");
     }
 
     try {
-
-       SharedFile.findById(req.body.shareId).then((doc) => {
+       SharedFile.findById(shareId).then((doc) => {
             return User.findById(doc.userId)
-        },(err)=>{
-          return res.status(400).send('File ID not valid!');
         }).then((user)=>{
-          return user.getSplitDirectory();
-        },(err2)=>{
-          return res.status(400).send('File ID not valid!');
+          userr = user;
+          return userr.getSplitDirectory();
         }).then((splitDirectory)=>{
           const file = splitDirectory.getFile(fileId);
-          merger.mergeFile(file.parts, req.user, res);
-        },(err3)=>{
-          return res.status(400).send('File ID not valid!');
+          merger.mergeFile(file.parts, userr, res);
+        }).catch((err)=>{
+          return res.status(400).send(err);
         })
     }
     catch (error) {
       // console.log(error);
-      res.status(400).send('Unable to download file');
+      res.status(400).send(error);
     }
   })
 
