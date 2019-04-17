@@ -44,24 +44,18 @@ router
   .get('/downloadShare/:fileId/:shareId', async (req, res) => {
     const fileId = req.params.fileId;
     const shareId = req.params.shareId;
-    let userr;
 
     if (!ObjectID.isValid(fileId)) {
-      return res.status(400).send("File id not valid");
+      return res.status(400).send('File id not valid');
     }
 
     try {
-       SharedFile.findById(shareId).then((doc) => {
-            return User.findById(doc.userId)
-        }).then((user)=>{
-          userr = user;
-          return userr.getSplitDirectory();
-        }).then((splitDirectory)=>{
-          const file = splitDirectory.getFile(fileId);
-          merger.mergeFile(file.parts, userr, res);
-        }).catch((err)=>{
-          return res.status(400).send(err);
-        })
+      const sharedFile = await SharedFile.findById(shareId);
+      const user = await User.findById(sharedFile.userId);
+      const splitDirectory = await user.getSplitDirectory();
+
+      const file = splitDirectory.getFile(fileId);
+      merger.mergeFile(file.parts, user, res);
     }
     catch (error) {
       // console.log(error);

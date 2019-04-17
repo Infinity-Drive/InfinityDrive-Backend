@@ -67,18 +67,11 @@ router
     }
 
     try {
-
-      SharedFile.findById(req.body.shareId).then((doc) => {
-        return User.findById(doc.userId)
-    }).then((user)=>{
-      return user.getTokensForAccounts([accountId]);
-    }).then((token)=>{
-      return gdriveHelper.getDownloadUrl(token, req.params.fileId);
-    }).then((downloadUrl)=>{
+      const sharedFile = await SharedFile.findById(req.body.shareId);
+      const user = await User.findById(sharedFile.userId);
+      const token = await user.getTokensForAccounts([accountId]);
+      const downloadUrl = await gdriveHelper.getDownloadUrl(token, req.params.fileId);
       res.send({ downloadUrl });
-    }).catch((err)=>{
-      return res.status(400).send(err);
-    })
     }
     catch (error) {
       res.status(400).send(error.message);
