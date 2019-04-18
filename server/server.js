@@ -14,7 +14,7 @@ const app = express();
 app.use(bodyParser.json()); // body parser lets us send json to our server
 
 app.use((req, res, next) => { // this runs before each route
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:4200');
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
   res.setHeader('Access-Control-Allow-Headers', 'x-auth,x-filesize,Content-Type');
   res.setHeader('Access-Control-Expose-Headers', 'x-auth,Content-Type');
