@@ -8,6 +8,7 @@ const { SplitDirectory } = require('../models/split-directory');
 const { authenticate } = require('../middleware/authenticate');
 const { getAccountsStorage } = require('../utils/utils');
 const { emailCredentials } = require('../config/config');
+const { sharedFile: SharedFile } = require('../models/shared-file');
 
 const router = express.Router();
 
@@ -112,6 +113,15 @@ router
     catch (error) {
       res.status(400).send(error);
     }
+  })
+
+  .get('/sharedFiles',authenticate, (req,res)=>{
+        
+    SharedFile.find({userId: req.user._id}).then((doc)=>{
+        res.send(doc);
+    },(err)=>{
+      res.status(400).send(err);
+    })
   })
 
   .delete('/remove/:accountId', authenticate, (req, res) => { // url param defined by :anyVarName
