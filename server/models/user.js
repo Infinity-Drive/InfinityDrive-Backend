@@ -6,7 +6,9 @@ const bcrypt = require('bcryptjs');
 
 const { SplitDirectory } = require('./split-directory');
 
-mongoose.connect('mongodb://localhost:27017/InfinityDrive', { useNewUrlParser: true });
+const connectionString = process.env.MONGODB_URI || 'mongodb://localhost:27017/InfinityDrive';
+
+mongoose.connect(connectionString, { useNewUrlParser: true });
 mongoose.set('useCreateIndex', true);
 mongoose.set('useFindAndModify', false);
 
@@ -124,10 +126,11 @@ UserSchema.methods.verifyEmail = function (token) {
         token,
       },
     },
-  isVerified:true});
-  
+    isVerified: true,
+  });
+
   // user.tokens.pull({token});
-  //return user.save().then(() => token);
+  // return user.save().then(() => token);
 };
 
 
