@@ -70,6 +70,17 @@ const UserSchema = new mongoose.Schema({
     },
   }],
 
+  settings: [{
+    showSplitFiles: {
+      type: Boolean,
+      default: false,
+    },
+    highLightSplitFiles: {
+      type: Boolean,
+      default: false,
+    },
+  }],
+
   splitDirectoryId: { type: mongoose.Schema.Types.ObjectId },
 });
 

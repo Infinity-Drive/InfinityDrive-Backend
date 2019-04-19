@@ -66,16 +66,23 @@ router
   .post('/upload', authenticate, async (req, res) => {
     try {
       const busboy = new BusBoy({ headers: req.headers, highWaterMark: 16000 });
-      const accounts = req.user.accounts.toObject();
-      const tokens = await req.user.getTokensForAccounts(accounts);
+      let accounts = req.user.accounts.toObject();
+
+      busboy.on('field', (fieldname, val) => {
+        if (fieldname === 'accounts') {
+          accounts = JSON.parse(val);
+        }
+      });
 
       busboy.on('file', async (fieldname, file, name, encoding, mimeType) => {
+        const tokens = await req.user.getTokensForAccounts(accounts);
         const ids = await splitter.splitFileAndUpload(tokens, file, Number(req.headers['x-filesize']), name);
         const parts = [];
         accounts.forEach((account, i) => {
           parts.push({
-            accountType: account.accountType,
-            accountId: account._id,
+            accountType: tokens[i].accountType,
+            // front end sends only the account ids like: [abc, abc]
+            accountId: account._id ? account._id : account,
             partId: ids[i],
           });
         });
