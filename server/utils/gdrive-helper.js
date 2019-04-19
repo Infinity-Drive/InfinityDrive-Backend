@@ -118,6 +118,7 @@ const getStorageInfo = async (token) => {
   return {
     total: userInfoResponse.data.storageQuota.limit,
     used: userInfoResponse.data.storageQuota.usage,
+    available: userInfoResponse.data.storageQuota.limit - userInfoResponse.data.storageQuota.usage,
   };
 };
 

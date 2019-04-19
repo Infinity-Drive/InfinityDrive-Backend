@@ -62,7 +62,11 @@ const getStorageInfo = async (token) => {
     console.log(e);
     throw new Error('Error getting storage info from Dropbox');
   });
-  return { total: info.allocation.allocated.toString(), used: info.used.toString() };
+  return {
+    total: info.allocation.allocated.toString(),
+    used: info.used.toString(),
+    available: info.allocation.allocated - info.used,
+  };
 };
 
 const getDownloadUrl = async (token, fileId) => {
