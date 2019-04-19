@@ -37,10 +37,11 @@ router
       // host = req.get('host');
       // link = "http://" + req.get('host') + "/verify?id=" + rand;
       const verificationUrl = process.env.EMAIL_URI || 'http://localhost:4200/EmailVerification';
+      const ReportUrl = process.env.Report_URI || 'http://localhost:4200/AccountReport';
       const mailOptions = {
         to: body.email,
         subject: 'Confirm signup for Infinity Drive',
-        html: `Hello,<br> Please Click on the link to verify your email.<br><a href=${verificationUrl}/${token}>Click here to verify</a>`,
+        html: `Hello,<br> Please Click on the link to verify your email.<br><a href=${verificationUrl}/${token}>Click here to verify</a><br> If this account was not created by you Please <a href=${ReportUrl}/${token}>report</a> it`
       };
       // console.log(mailOptions);
       smtpTransport.sendMail(mailOptions, (error, response) => {
@@ -83,6 +84,32 @@ router
         // console.log(user)
         user.verifyEmail(token).then(() => {
           res.status(200).send('Verified');
+        }, (e) => {
+          res.status(400).send(e);
+        });
+      }).catch((e) => {
+        console.log(e);
+        res.status(401).send('Not authorized');
+      });
+    }
+    catch (error) {
+      res.status(401).send(error);
+    }
+  })
+
+
+  .post('/reportAccount', async (req, res) => {
+    try {
+      const token = req.body.token;
+      // console.log(token)
+      User.findByVerificationToken(token).then((user) => {
+        // valid token but user not found
+        if (!user) {
+          return Promise.reject();
+        }
+        // console.log(user)
+        User.deleteOne({_id: user._id}).then(() => {
+          res.status(200).send('Deleted');
         }, (e) => {
           res.status(400).send(e);
         });
