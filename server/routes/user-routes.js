@@ -36,10 +36,11 @@ router
       // rand = Math.floor((Math.random() * 100) + 54);
       // host = req.get('host');
       // link = "http://" + req.get('host') + "/verify?id=" + rand;
+      const verificationUrl = `${process.env.EMAIL_URI}/${token}` || `http://localhost:4200/EmailVerification/${token}`;
       const mailOptions = {
         to: body.email,
         subject: 'Confirm signup for Infinity Drive',
-        html: `Hello,<br> Please Click on the link to verify your email.<br><a href=http://localhost:4200/EmailVerification/${token}>Click here to verify</a>`,
+        html: `Hello,<br> Please Click on the link to verify your email.<br><a href=${verificationUrl}>Click here to verify</a>`,
       };
       // console.log(mailOptions);
       smtpTransport.sendMail(mailOptions, (error, response) => {
@@ -115,13 +116,12 @@ router
     }
   })
 
-  .get('/sharedFiles',authenticate, (req,res)=>{
-        
-    SharedFile.find({userId: req.user._id}).then((doc)=>{
-        res.send(doc);
-    },(err)=>{
+  .get('/sharedFiles', authenticate, (req, res) => {
+    SharedFile.find({ userId: req.user._id }).then((doc) => {
+      res.send(doc);
+    }, (err) => {
       res.status(400).send(err);
-    })
+    });
   })
 
   .delete('/remove/:accountId', authenticate, (req, res) => { // url param defined by :anyVarName
