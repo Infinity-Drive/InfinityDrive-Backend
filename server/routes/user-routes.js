@@ -124,6 +124,15 @@ router
     });
   })
 
+  .delete('/deleteShared/:sharedId', authenticate, (req, res) => {
+    
+    SharedFile.deleteOne({_id:req.params.sharedId , userId: req.user._id}).then(()=>{
+      res.status(200).send();
+    },(err)=>{
+      res.status(400).send(err);
+    })
+  })
+
   .delete('/remove/:accountId', authenticate, (req, res) => { // url param defined by :anyVarName
     const accountId = req.params.accountId;
     if (!ObjectID.isValid(accountId)) {
@@ -139,6 +148,6 @@ router
     }, () => {
       res.status(400).send();
     });
-  });
+  })
 
 module.exports = router;
