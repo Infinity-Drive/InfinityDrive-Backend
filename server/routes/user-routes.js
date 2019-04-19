@@ -1,4 +1,4 @@
-const _ = require('lodash');
+const { pick } = require('lodash');
 const ObjectID = require('mongoose').Types.ObjectId;
 const express = require('express');
 const nodemailer = require('nodemailer');
@@ -25,7 +25,7 @@ const smtpTransport = nodemailer.createTransport({
 router
 
   .post('/', async (req, res) => {
-    const body = _.pick(req.body, ['email', 'password', 'name']);
+    const body = pick(req.body, ['email', 'password', 'name']);
 
     const newUser = new User(body);
     let splitDirectory = new SplitDirectory({});
@@ -61,7 +61,7 @@ router
 
   .post('/login', async (req, res) => {
     try {
-      const body = _.pick(req.body, ['email', 'password']);
+      const body = pick(req.body, ['email', 'password']);
       const user = await User.findByCredentials(body.email, body.password);
       const token = await user.generateAuthToken();
       res.header('x-auth', token).send(user);

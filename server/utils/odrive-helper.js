@@ -158,7 +158,11 @@ const getStorageInfo = async (token) => {
     throw new Error('Error getting storage info from OneDrive');
   });
 
-  return { total: info.data.quota.total.toString(), used: info.data.quota.used.toString() };
+  return {
+    total: info.data.quota.total.toString(),
+    used: info.data.quota.used.toString(),
+    available: info.data.quota.total - info.data.quota.used,
+  };
 };
 
 const upload = async (token, filename, readableStream, fileSize, parentId = 'root') => {
