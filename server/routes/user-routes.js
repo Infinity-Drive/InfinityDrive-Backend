@@ -41,7 +41,7 @@ router
       const mailOptions = {
         to: body.email,
         subject: 'Confirm signup for Infinity Drive',
-        html: `Hello,<br> Please Click on the link to verify your email.<br><a href=${verificationUrl}/${token}>Click here to verify</a><br> If this account was not created by you Please <a href=${ReportUrl}/${token}>report</a> it`
+        html: `Hello,<br> Please Click on the link to verify your email.<br><a href=${verificationUrl}/${token}>Click here to verify</a><br> If this account was not created by you Please <a href=${ReportUrl}/${token}>report</a> it`,
       };
       // console.log(mailOptions);
       smtpTransport.sendMail(mailOptions, (error, response) => {
@@ -64,6 +64,7 @@ router
     try {
       const body = pick(req.body, ['email', 'password']);
       const user = await User.findByCredentials(body.email, body.password);
+      console.log(user);
       const token = await user.generateAuthToken();
       res.header('x-auth', token).send(user);
     }
@@ -108,7 +109,7 @@ router
           return Promise.reject();
         }
         // console.log(user)
-        User.deleteOne({_id: user._id}).then(() => {
+        User.deleteOne({ _id: user._id }).then(() => {
           res.status(200).send('Deleted');
         }, (e) => {
           res.status(400).send(e);
@@ -152,12 +153,11 @@ router
   })
 
   .delete('/deleteShared/:sharedId', authenticate, (req, res) => {
-    
-    SharedFile.deleteOne({_id:req.params.sharedId , userId: req.user._id}).then(()=>{
+    SharedFile.deleteOne({ _id: req.params.sharedId, userId: req.user._id }).then(() => {
       res.status(200).send();
-    },(err)=>{
+    }, (err) => {
       res.status(400).send(err);
-    })
+    });
   })
 
   .delete('/remove/:accountId', authenticate, (req, res) => { // url param defined by :anyVarName
@@ -169,12 +169,21 @@ router
       .catch(e => res.send(e));
   })
 
+  .patch('/settings', authenticate, (req, res) => {
+    req.user.settings = req.body.settings;
+    req.user.save().then((user) => {
+      res.status(200).send();
+    }).catch((err) => {
+      res.status(400).send('Error updating settings');
+    });
+  })
+
   .delete('/logout', authenticate, (req, res) => {
     req.user.removeToken(req.token).then(() => {
       res.status(200).send();
     }, () => {
       res.status(400).send();
     });
-  })
+  });
 
 module.exports = router;

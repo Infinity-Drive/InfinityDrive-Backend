@@ -70,16 +70,16 @@ const UserSchema = new mongoose.Schema({
     },
   }],
 
-  settings: [{
-    showSplitFiles: {
+  settings: {
+    showSplitParts: {
       type: Boolean,
       default: false,
     },
-    highLightSplitFiles: {
+    highlightSplitFiles: {
       type: Boolean,
       default: false,
     },
-  }],
+  },
 
   splitDirectoryId: { type: mongoose.Schema.Types.ObjectId },
 });
@@ -90,7 +90,7 @@ UserSchema.methods.toJSON = function () {
   // mongoose object to java script obj
   const userObject = user.toObject();
   // dont send security related data back to user
-  return _.pick(userObject, ['_id', 'email', 'name']);
+  return _.pick(userObject, ['_id', 'email', 'name', 'settings']);
 };
 
 // can add any instance method we like. We have added this method
