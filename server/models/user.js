@@ -71,6 +71,10 @@ const UserSchema = new mongoose.Schema({
   }],
 
   settings: {
+    showAccountsInDashboard: {
+      type: Boolean,
+      default: false,
+    },
     showSplitParts: {
       type: Boolean,
       default: false,
