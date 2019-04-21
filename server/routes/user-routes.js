@@ -98,6 +98,35 @@ router
     }
   })
 
+  .post('/passwordReset', (req, res) => {
+   
+    try {
+      const token = req.body.token;
+      // console.log(token)
+      User.findByResetToken(token).then((user) => {
+        // valid token but user not found
+        if (!user) {
+          return Promise.reject();
+        }
+        user.changePassword(req.body.password).then((doc) => {
+          // console.log(doc)
+          // user.removeToken(token).then(() => {
+          //   res.status(200).send('Password Changed');
+          // })
+        }, (e) => {
+          res.status(400).send(e);
+        });
+      }).catch((e) => {
+        console.log(e);
+        res.status(401).send('Not authorized');
+      });
+    }
+    catch (error) {
+      res.status(401).send(error);
+    }
+
+  })
+
 
   .post('/reportAccount', async (req, res) => {
     try {
@@ -147,7 +176,7 @@ router
 
   .post('/requestPasswordReset', async (req, res)=>{
     const email = req.body.email;
-    const ResetUrl = process.env.EMAIL_URI || 'http://localhost:4200/EmailVerification';
+    const ResetUrl = process.env.Password_URI || 'http://localhost:4200/ResetPassword';
     try{
         user =  await User.find({email});
         if(user.length > 0){

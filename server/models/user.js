@@ -174,6 +174,22 @@ UserSchema.methods.verifyEmail = function (token) {
 };
 
 
+UserSchema.methods.changePassword = function (pass) {
+  // this method run for a given user object.
+  const user = this; // we didnt use a cb function since we want to use 'this'
+
+  return new Promise(function(res, rej) {
+    bcrypt.genSalt(10, (err, salt) => {
+      bcrypt.hash(pass, salt, (err, hash) => {
+        res(user.updateOne({ password: hash}))
+     });
+  })
+  })
+  // user.tokens.pull({token});
+  // return user.save().then(() => token);
+};
+
+
 UserSchema.methods.addAccount = function (token, accountType, email) {
   return new Promise((resolve, reject) => {
     const user = this;
@@ -310,6 +326,23 @@ UserSchema.statics.findByVerificationToken = function (token) {
     _id: decoded._id,
     'tokens.token': token, // quotes are required when we have a . in the value
     'tokens.access': 'verification',
+  }); // since we're returning this, the promise can be caught in server.js
+};
+
+UserSchema.statics.findByResetToken = function (token) {
+  const User = this;
+  let decoded;
+
+  try {
+    decoded = jwt.verify(token, 'my secret');
+  }
+  catch (e) {
+    return Promise.reject();
+  }
+
+  return User.findOne({ // find user against the given token
+    _id: decoded._id,
+    'tokens.token': token, // quotes are required when we have a . in the value
   }); // since we're returning this, the promise can be caught in server.js
 };
 
