@@ -186,7 +186,7 @@ router
             const mailOptions = {
               to: req.body.email,
               subject: 'password reset',
-              html: `Hello,<br> Please Click on the link to reset your password.<br><a href=${ResetUrl}/${token}>Click here to reset</a>`,
+              html: `Hello,<br> Please Click on the link to reset your password.<br><a href=${frontEndUrl}/ResetPassword/${token}>Click here to reset</a>`,
             };
             smtpTransport.sendMail(mailOptions, (error, response) => {
               if (error) {
