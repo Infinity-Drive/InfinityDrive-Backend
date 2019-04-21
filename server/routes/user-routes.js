@@ -36,12 +36,13 @@ router
       // rand = Math.floor((Math.random() * 100) + 54);
       // host = req.get('host');
       // link = "http://" + req.get('host') + "/verify?id=" + rand;
-      const verificationUrl = process.env.EMAIL_URI || 'http://localhost:4200/EmailVerification';
-      const ReportUrl = process.env.Report_URI || 'http://localhost:4200/AccountReport';
+      const frontEndUrl = process.env.FRONTEND_URI || 'http://localhost:4200';
       const mailOptions = {
         to: body.email,
         subject: 'Confirm signup for Infinity Drive',
-        html: `Hello,<br> Please Click on the link to verify your email.<br><a href=${verificationUrl}/${token}>Click here to verify</a><br> If this account was not created by you Please <a href=${ReportUrl}/${token}>report</a> it`,
+        html: `Hello,<br> Please click on the link to verify your email.\
+        <br><a href=${frontEndUrl}/EmailVerification/${token}>Click here to verify</a>.<br>\
+        If this account was not created by you, please <a href=${frontEndUrl}/AccountReport/${token}>report</a> it.`,
       };
       // console.log(mailOptions);
       smtpTransport.sendMail(mailOptions, (error, response) => {
