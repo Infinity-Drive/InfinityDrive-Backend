@@ -110,10 +110,10 @@ router
           return Promise.reject();
         }
         user.changePassword(req.body.password).then((doc) => {
-          // console.log(doc)
-          // user.removeToken(token).then(() => {
-          //   res.status(200).send('Password Changed');
-          // })
+          console.log(doc)
+          user.removeToken(token).then(() => {
+            res.status(200).send('Password Changed');
+          })
         }, (e) => {
           res.status(400).send(e);
         });
@@ -177,7 +177,7 @@ router
 
   .post('/requestPasswordReset', async (req, res)=>{
     const email = req.body.email;
-    const ResetUrl = process.env.Password_URI || 'http://localhost:4200/ResetPassword';
+    const frontEndUrl = process.env.FRONTEND_URI || 'http://localhost:4200';
     try{
         user =  await User.find({email});
         if(user.length > 0){
