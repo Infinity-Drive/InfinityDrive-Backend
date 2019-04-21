@@ -27,38 +27,44 @@ router
   .post('/', async (req, res) => {
     const body = pick(req.body, ['email', 'password', 'name']);
 
-    const newUser = new User(body);
-    let splitDirectory = new SplitDirectory({});
-    splitDirectory = await splitDirectory.save();
-    newUser.splitDirectoryId = splitDirectory.id;
+    const usrs = await User.find({ 'email': body.email })
+    if (usrs.length > 0) {
+      res.status(409).send('user already exsist')
+    }
+    else {
+      const newUser = new User(body);
+      let splitDirectory = new SplitDirectory({});
+      splitDirectory = await splitDirectory.save();
+      newUser.splitDirectoryId = splitDirectory.id;
 
-    newUser.save().then(() => newUser.generateVerificationToken()).then((token) => {
-      // rand = Math.floor((Math.random() * 100) + 54);
-      // host = req.get('host');
-      // link = "http://" + req.get('host') + "/verify?id=" + rand;
-      const frontEndUrl = process.env.FRONTEND_URI || 'http://localhost:4200';
-      const mailOptions = {
-        to: body.email,
-        subject: 'Confirm signup for Infinity Drive',
-        html: `Hello,<br> Please click on the link to verify your email.\
+      newUser.save().then(() => newUser.generateVerificationToken()).then((token) => {
+        // rand = Math.floor((Math.random() * 100) + 54);
+        // host = req.get('host');
+        // link = "http://" + req.get('host') + "/verify?id=" + rand;
+        const frontEndUrl = process.env.FRONTEND_URI || 'http://localhost:4200';
+        const mailOptions = {
+          to: body.email,
+          subject: 'Confirm signup for Infinity Drive',
+          html: `Hello,<br> Please click on the link to verify your email.\
         <br><a href=${frontEndUrl}/EmailVerification/${token}>Click here to verify</a>.<br>\
         If this account was not created by you, please <a href=${frontEndUrl}/AccountReport/${token}>report</a> it.`,
-      };
-      // console.log(mailOptions);
-      smtpTransport.sendMail(mailOptions, (error, response) => {
-        if (error) {
-          console.log(error);
-          res.status(400).send(error);
-        }
-        else {
-          // console.log('Message sent');
-          res.header('x-auth', token).send(newUser);
-          res.end('sent');
-        }
+        };
+        // console.log(mailOptions);
+        smtpTransport.sendMail(mailOptions, (error, response) => {
+          if (error) {
+            console.log(error);
+            res.status(400).send(error);
+          }
+          else {
+            // console.log('Message sent');
+            res.header('x-auth', token).send(newUser);
+            res.end('sent');
+          }
+        });
+      }).catch((err) => {
+        res.status(400).send(err);
       });
-    }).catch((err) => {
-      res.status(400).send(err);
-    });
+    }
   })
 
   .post('/login', async (req, res) => {
@@ -100,7 +106,7 @@ router
   })
 
   .post('/passwordReset', (req, res) => {
-   
+
     try {
       const token = req.body.token;
       // console.log(token)
@@ -175,36 +181,36 @@ router
     }
   })
 
-  .post('/requestPasswordReset', async (req, res)=>{
+  .post('/requestPasswordReset', async (req, res) => {
     const email = req.body.email;
     const frontEndUrl = process.env.FRONTEND_URI || 'http://localhost:4200';
-    try{
-        user =  await User.find({email});
-        if(user.length > 0){
-            const token = await user[0].generateResetToken();
+    try {
+      user = await User.find({ email });
+      if (user.length > 0) {
+        const token = await user[0].generateResetToken();
 
-            const mailOptions = {
-              to: req.body.email,
-              subject: 'password reset',
-              html: `Hello,<br> Please Click on the link to reset your password.<br><a href=${frontEndUrl}/ResetPassword/${token}>Click here to reset</a>`,
-            };
-            smtpTransport.sendMail(mailOptions, (error, response) => {
-              if (error) {
-                console.log(error);
-                res.status(400).send(error);
-              }
-              else {
-                res.send('Email sent');
-              }
-            });
+        const mailOptions = {
+          to: req.body.email,
+          subject: 'password reset',
+          html: `Hello,<br> Please Click on the link to reset your password.<br><a href=${frontEndUrl}/ResetPassword/${token}>Click here to reset</a>`,
+        };
+        smtpTransport.sendMail(mailOptions, (error, response) => {
+          if (error) {
+            console.log(error);
+            res.status(400).send(error);
+          }
+          else {
+            res.send('Email sent');
+          }
+        });
 
 
-        }else{
-          res.status(400).send('No account found')
-        }
+      } else {
+        res.status(400).send('No account found')
+      }
     }
-    catch(err){
-        res.status(400).send(err)
+    catch (err) {
+      res.status(400).send(err)
     }
 
   })
