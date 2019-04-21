@@ -124,6 +124,7 @@ router
     }
   })
 
+
   .get('/getAccounts', authenticate, async (req, res) => {
     const accounts = req.user.accounts.toObject();
 
@@ -142,6 +143,40 @@ router
     catch (error) {
       res.status(400).send(error);
     }
+  })
+
+  .post('/requestPasswordReset', async (req, res)=>{
+    const email = req.body.email;
+    const ResetUrl = process.env.EMAIL_URI || 'http://localhost:4200/EmailVerification';
+    try{
+        user =  await User.find({email});
+        if(user.length > 0){
+            const token = await user[0].generateResetToken();
+
+            const mailOptions = {
+              to: req.body.email,
+              subject: 'password reset',
+              html: `Hello,<br> Please Click on the link to reset your password.<br><a href=${ResetUrl}/${token}>Click here to reset</a>`,
+            };
+            smtpTransport.sendMail(mailOptions, (error, response) => {
+              if (error) {
+                console.log(error);
+                res.status(400).send(error);
+              }
+              else {
+                res.send('Email sent');
+              }
+            });
+
+
+        }else{
+          res.status(400).send('No account found')
+        }
+    }
+    catch(err){
+        res.status(400).send(err)
+    }
+
   })
 
   .get('/sharedFiles', authenticate, (req, res) => {

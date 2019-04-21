@@ -29,7 +29,7 @@ const UserSchema = new mongoose.Schema({
     // this ensures that only unqiue emails (that don't exist in the db can be added)
     unique: true,
     validate: {
-    // validator expects a fuction that will either return true or false
+      // validator expects a fuction that will either return true or false
       validator: validator.isEmail,
       message: '{VALUE} is not a valid email',
     },
@@ -110,6 +110,31 @@ UserSchema.methods.generateAuthToken = function () {
   user.tokens.push({ access, token });
 
   return user.save().then(() => token);
+};
+
+
+UserSchema.methods.generateResetToken = async function () {
+  // this method run for a given user object.
+  // that is, we run after the doc has been inserted into the db
+  const user = this; // we didnt use a cb function since we want to use 'this'
+  let count = 0;
+  let token = '';
+  await user.tokens.filter((val) => {
+    if (val.access == 'reset') {
+      count++;
+      token = val.token;
+    }
+  })
+  if (count > 0) {
+    return token
+  }
+  else {
+    const access = 'reset';
+    token = jwt.sign({ _id: user._id.toHexString(), access }, 'my secret').toString();
+    // user.tokens.concat([{access, token}]); //concat into the tokens array
+    user.tokens.push({ access, token });
+    return user.save().then(() => token);
+  }
 };
 
 
