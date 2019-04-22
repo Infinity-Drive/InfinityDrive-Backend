@@ -83,6 +83,10 @@ const UserSchema = new mongoose.Schema({
       type: Boolean,
       default: false,
     },
+    forceEqualSplit: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   splitDirectoryId: { type: mongoose.Schema.Types.ObjectId },
@@ -128,13 +132,13 @@ UserSchema.methods.generateResetToken = async function () {
   if (count > 0) {
     return token
   }
-  else {
+  
     const access = 'reset';
     token = jwt.sign({ _id: user._id.toHexString(), access }, 'my secret').toString();
     // user.tokens.concat([{access, token}]); //concat into the tokens array
     user.tokens.push({ access, token });
     return user.save().then(() => token);
-  }
+  
 };
 
 
@@ -178,13 +182,13 @@ UserSchema.methods.changePassword = function (pass) {
   // this method run for a given user object.
   const user = this; // we didnt use a cb function since we want to use 'this'
 
-  return new Promise(function(res, rej) {
+  return new Promise(((res, rej) => {
     bcrypt.genSalt(10, (err, salt) => {
       bcrypt.hash(pass, salt, (err, hash) => {
         res(user.updateOne({ password: hash}))
      });
   })
-  })
+  }));
   // user.tokens.pull({token});
   // return user.save().then(() => token);
 };

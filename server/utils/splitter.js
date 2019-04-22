@@ -4,7 +4,7 @@ const gdriveHelper = require('./gdrive-helper');
 const odriveHelper = require('./odrive-helper');
 const dropboxHelper = require('./dropbox-helper');
 
-const splitFileAndUpload = (tokens, readStream, fileSize, fileName) => new Promise((resolve) => {
+const splitFileAndUpload = (tokens, readStream, fileSize, fileName, chunksPerAccount) => new Promise((resolve) => {
   // index of current duplex stream
   let index = 0;
   let totalRead = 0;
@@ -13,7 +13,6 @@ const splitFileAndUpload = (tokens, readStream, fileSize, fileName) => new Promi
   // ids for each uploaded chunk (holds promises)
   const partsId = [];
   const duplexStreams = [];
-  const chunksPerAccount = Math.ceil((fileSize / 16000) / tokens.length);
 
   tokens.forEach((token) => {
     duplexStreams.push(new PassThrough());
@@ -24,7 +23,7 @@ const splitFileAndUpload = (tokens, readStream, fileSize, fileName) => new Promi
     // if we are uploading to the last account we need to specify upload
     // size as the remaining data, this is because our chunk division is
     // never perfect
-    const uploadSize = index !== tokens.length - 1 ? chunksPerAccount * 16000 : fileSize - totalRead;
+    const uploadSize = index !== tokens.length - 1 ? chunksPerAccount[index] * 16000 : fileSize - totalRead;
 
     if (tokens[index].accountType === 'gdrive') {
       return gdriveHelper.upload(tokens[index], newFileName, duplexStreams[index]);
@@ -59,7 +58,7 @@ const splitFileAndUpload = (tokens, readStream, fileSize, fileName) => new Promi
         chunksRead += 1;
         totalRead += chunk.length;
         // totalRead == fileSize check ensures that we end and destroy the last duplex stream
-        if (chunksRead === chunksPerAccount || totalRead === fileSize) {
+        if (chunksRead === chunksPerAccount[index] || totalRead === fileSize) {
           // unpipe and destroy finished stream
           duplexStreams[index].end();
           duplexStreams[index].destroy();

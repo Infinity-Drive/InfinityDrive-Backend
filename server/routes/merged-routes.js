@@ -75,8 +75,17 @@ router
       });
 
       busboy.on('file', async (fieldname, file, name, encoding, mimeType) => {
-        const tokens = await req.user.getTokensForAccounts(accounts);
-        const ids = await splitter.splitFileAndUpload(tokens, file, Number(req.headers['x-filesize']), name);
+        const tokens = await req.user.getTokensForAccounts(accounts.map(a => a._id));
+        let chunksPerAccount;
+        const fileSize = Number(req.headers['x-filesize']);
+        if (!req.user.settings.forceEqualSplit) {
+          chunksPerAccount = accounts.map(a => a.chunksToUpload);
+        }
+        else {
+          chunksPerAccount = accounts.map(a => Math.ceil((fileSize / 16000) / tokens.length));
+        }
+
+        const ids = await splitter.splitFileAndUpload(tokens, file, fileSize, name, chunksPerAccount);
         const parts = [];
         accounts.forEach((account, i) => {
           parts.push({
