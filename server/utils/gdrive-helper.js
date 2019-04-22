@@ -131,7 +131,7 @@ const getFilesForAccount = async (token, folderId = 'root') => {
     q: `'me' in owners and '${folderId}' in parents and trashed = false`,
     pageSize: 50,
     fields: 'nextPageToken, files(id, name, mimeType, size, modifiedTime)',
-    key: 'AIzaSyDHtla9ZqVhQm-dqEbFsM-sArr29XizGg4',
+    key: 'AIzaSyBpR0oXZASzfdx1eA43tG82HomoiCjPyGU',
   }).catch((e) => {
     console.log(e);
     throw new Error('Error getting files from Google Drive');
