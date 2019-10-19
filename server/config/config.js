@@ -1,3 +1,5 @@
+const dbUrl = 'mongodb://localhost:27017/InfinityDrive';
+
 module.exports = {
   odriveCreds: {
     redirectUrl: process.env.REDIRECT_URI || 'http://localhost:4200/Dashboard/Accounts',
@@ -21,9 +23,6 @@ module.exports = {
     redirectUri: process.env.REDIRECT_URI || 'http://localhost:4200/Dashboard/Accounts',
   },
 
-  emailCredentials: {
-    user: 'infinitydrive97@gmail.com',
-    pass: 'infinity97drive',
-  },
+  dbConnectionUrl: process.env.NODE_ENV === 'test' ? `${dbUrl}Test` : process.env.MONGODB_URI || dbUrl,
 
 };

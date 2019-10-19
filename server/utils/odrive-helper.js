@@ -3,7 +3,7 @@ const qs = require('querystring');
 const oneDriveAPI = require('onedrive-api');
 
 const { odriveCreds } = require('../config/config');
-const { User } = require('../models/user');
+const { User } = require('../db/models/user');
 
 const verifyTokenValidity = async (token) => {
   const currentTime = new Date();

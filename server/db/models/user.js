@@ -1,16 +1,10 @@
-const mongoose = require('mongoose');
+const { mongoose } = require('../connection');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
 const bcrypt = require('bcryptjs');
 
 const { SplitDirectory } = require('./split-directory');
-
-const connectionString = process.env.MONGODB_URI || 'mongodb://localhost:27017/InfinityDrive';
-
-mongoose.connect(connectionString, { useNewUrlParser: true });
-mongoose.set('useCreateIndex', true);
-mongoose.set('useFindAndModify', false);
 
 const UserSchema = new mongoose.Schema({
   verficationToken: { type: String },

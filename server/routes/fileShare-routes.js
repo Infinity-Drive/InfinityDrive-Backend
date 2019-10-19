@@ -1,7 +1,7 @@
 const express = require('express');
 
 const { authenticate } = require('../middleware/authenticate');
-const { sharedFile: SharedFile } = require('../models/shared-file');
+const { sharedFile: SharedFile } = require('../db/models/shared-file');
 
 const router = express.Router();
 

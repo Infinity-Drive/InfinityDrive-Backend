@@ -2,7 +2,7 @@ const { google } = require('googleapis');
 const axios = require('axios');
 
 const { gdriveCreds } = require('../config/config');
-const { User } = require('../models/user');
+const { User } = require('../db/models/user');
 
 
 const auth = new google.auth.OAuth2(gdriveCreds.client_id,

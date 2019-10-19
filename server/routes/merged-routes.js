@@ -6,8 +6,8 @@ const { authenticate } = require('../middleware/authenticate');
 const splitter = require('../utils/splitter');
 const mergedHelper = require('../utils/merged-helper');
 const merger = require('../utils/merger');
-const { sharedFile: SharedFile } = require('../models/shared-file');
-const { User } = require('../models/user');
+const { sharedFile: SharedFile } = require('../db/models/shared-file');
+const { User } = require('../db/models/user');
 
 const router = express.Router();
 

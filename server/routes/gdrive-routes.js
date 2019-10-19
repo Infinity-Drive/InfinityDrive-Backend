@@ -5,8 +5,8 @@ const { ObjectID } = require('mongoose').Types.ObjectId;
 const { authenticate } = require('../middleware/authenticate');
 const gdriveHelper = require('../utils/gdrive-helper');
 
-const { sharedFile: SharedFile } = require('../models/shared-file');
-const { User } = require('../models/user');
+const { sharedFile: SharedFile } = require('../db/models/shared-file');
+const { User } = require('../db/models/user');
 
 const router = express.Router();
 

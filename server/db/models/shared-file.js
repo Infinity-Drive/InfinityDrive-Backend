@@ -1,10 +1,5 @@
-const mongoose = require('mongoose');
+const { mongoose } = require('../connection');
 const jwt = require('jsonwebtoken');
-
-const connectionString = process.env.MONGODB_URI || 'mongodb://localhost:27017/InfinityDrive';
-
-mongoose.connect(connectionString, { useNewUrlParser: true });
-mongoose.set('useCreateIndex', true);
 
 const SharedFileSchema = new mongoose.Schema({
 

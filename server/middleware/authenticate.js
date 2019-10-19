@@ -1,4 +1,4 @@
-const { User } = require('./../models/user');
+const { User } = require('../db/models/user');
 
 /**
  * authenticate middleware makes the route private because it searches for a user in our database

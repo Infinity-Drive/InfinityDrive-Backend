@@ -1,35 +1,26 @@
 const { pick } = require('lodash');
 const ObjectID = require('mongoose').Types.ObjectId;
 const express = require('express');
-const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 
-const { User } = require('../models/user');
-const { SplitDirectory } = require('../models/split-directory');
+const { User } = require('../db/models/user');
+const { SplitDirectory } = require('../db/models/split-directory');
 const { authenticate } = require('../middleware/authenticate');
 const { getAccountsStorage } = require('../utils/utils');
-const { emailCredentials } = require('../config/config');
-const { sharedFile: SharedFile } = require('../models/shared-file');
+const { sharedFile: SharedFile } = require('../db/models/shared-file');
 
 const router = express.Router();
 
-/*
-    Here we are configuring our SMTP Server details.
-    STMP is mail server which is responsible for sending and recieving email.
-*/
-const smtpTransport = nodemailer.createTransport({
-  service: 'Gmail',
-  auth: emailCredentials,
-});
-/* ------------------SMTP Over-----------------------------*/
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 router
 
   .post('/', async (req, res) => {
     const body = pick(req.body, ['email', 'password', 'name']);
 
-    const usrs = await User.find({ 'email': body.email })
+    const usrs = await User.find({ email: body.email });
     if (usrs.length > 0) {
-      res.status(409).send('user already exsist')
+      res.status(409).send('user already exsist');
     }
     else {
       const newUser = new User(body);
@@ -38,28 +29,20 @@ router
       newUser.splitDirectoryId = splitDirectory.id;
 
       newUser.save().then(() => newUser.generateVerificationToken()).then((token) => {
-        // rand = Math.floor((Math.random() * 100) + 54);
-        // host = req.get('host');
-        // link = "http://" + req.get('host') + "/verify?id=" + rand;
         const frontEndUrl = process.env.FRONTEND_URI || 'http://localhost:4200';
-        const mailOptions = {
+        const msg = {
           to: body.email,
+          from: 'support@infinitydrive.com',
           subject: 'Confirm signup for Infinity Drive',
+          text: 'and easy to do anywhere, even with Node.js',
           html: `Hello,<br> Please click on the link to verify your email.\
-        <br><a href=${frontEndUrl}/EmailVerification/${token}>Click here to verify</a>.<br>\
-        If this account was not created by you, please <a href=${frontEndUrl}/AccountReport/${token}>report</a> it.`,
+          <br><a href=${frontEndUrl}/EmailVerification/${token}>Click here to verify</a>.<br>\
+          If this account was not created by you, please <a href=${frontEndUrl}/AccountReport/${token}>report</a> it.`,
         };
-        // console.log(mailOptions);
-        smtpTransport.sendMail(mailOptions, (error, response) => {
-          if (error) {
-            console.log(error);
-            res.status(400).send(error);
-          }
-          else {
-            // console.log('Message sent');
-            res.header('x-auth', token).send(newUser);
-            res.end('sent');
-          }
+        sgMail.send(msg).then(() => {
+          res.end();
+        }).catch((err) => {
+          throw new Error('Error sending email');
         });
       }).catch((err) => {
         res.status(400).send(err);
@@ -106,7 +89,6 @@ router
   })
 
   .post('/passwordReset', (req, res) => {
-
     try {
       const token = req.body.token;
       // console.log(token)
@@ -116,10 +98,10 @@ router
           return Promise.reject();
         }
         user.changePassword(req.body.password).then((doc) => {
-          console.log(doc)
+          console.log(doc);
           user.removeToken(token).then(() => {
             res.status(200).send('Password Changed');
-          })
+          });
         }, (e) => {
           res.status(400).send(e);
         });
@@ -131,7 +113,6 @@ router
     catch (error) {
       res.status(401).send(error);
     }
-
   })
 
 
@@ -185,34 +166,30 @@ router
     const email = req.body.email;
     const frontEndUrl = process.env.FRONTEND_URI || 'http://localhost:4200';
     try {
-      user = await User.find({ email });
+      const user = await User.find({ email });
       if (user.length > 0) {
         const token = await user[0].generateResetToken();
 
-        const mailOptions = {
+        const msg = {
           to: req.body.email,
-          subject: 'password reset',
+          from: 'support@infinitydrive.com',
+          subject: 'Password Reset',
+          text: 'and easy to do anywhere, even with Node.js',
           html: `Hello,<br> Please Click on the link to reset your password.<br><a href=${frontEndUrl}/ResetPassword/${token}>Click here to reset</a>`,
         };
-        smtpTransport.sendMail(mailOptions, (error, response) => {
-          if (error) {
-            console.log(error);
-            res.status(400).send(error);
-          }
-          else {
-            res.send('Email sent');
-          }
+        sgMail.send(msg).then(() => {
+          res.send('Email sent');
+        }).catch((err) => {
+          throw new Error('Error sending email');
         });
-
-
-      } else {
-        res.status(400).send('No account found')
+      }
+      else {
+        res.status(400).send('No account found');
       }
     }
     catch (err) {
-      res.status(400).send(err)
+      res.status(400).send(err);
     }
-
   })
 
   .get('/sharedFiles', authenticate, (req, res) => {
