@@ -19,7 +19,7 @@
   "homepage": "https://github.com/mhd3v/InfinityDrive#readme",
   "dependencies": {
     "@sendgrid/mail": "^6.4.0",
-    "async": "^2.6.1",
+    "async": "^3.2.2",
     "axios": "^0.18.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.3",
